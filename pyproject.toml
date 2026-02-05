@@ -1,0 +1,67 @@
+[build-system]
+requires = ["uv_build>=0.9.30"]
+build-backend = "uv_build"
+
+[project]
+name = "pytest-vigil"
+version = "0.1.0"
+description = "A pytest plugin for enhanced test reliability and monitoring"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Sergei Konovalov", email = "l0kifs91@gmail.com" }
+]
+maintainers = [
+    { name = "l0kifs", email = "l0kifs91@gmail.com" }
+]
+keywords = [
+    "developer-tools",
+    "pytest-plugin",
+    "testing",
+    "test-reliability",
+    "test-monitoring",
+    "test-timeout",
+    "test-resource-usage",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Environment :: Plugins",
+    "Natural Language :: English",
+]
+dependencies = [
+    "pytest>=9.0.0",
+    "loguru>=0.7.0",
+    "psutil>=7.2.2",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.5",
+    "ty>=0.0.11",
+    "pytest-xdist>=3.0.0",
+]
+
+[project.entry-points.pytest11]
+pytest-vigil = "pytest_vigil.plugin"
+
+[tool.uv]
+package = true
+
+[project.urls]
+Homepage = "https://github.com/l0kifs/pytest-vigil"
+Documentation = "https://github.com/l0kifs/pytest-vigil/blob/main/README.md"
+Repository = "https://github.com/l0kifs/pytest-vigil.git"
+Issues = "https://github.com/l0kifs/pytest-vigil/issues"
+Changelog = "https://github.com/l0kifs/pytest-vigil/blob/main/CHANGELOG.md"
