@@ -25,7 +25,7 @@ jobs:
       - name: Install UV
         uses: astral-sh/setup-uv@v4
         with:
-          enable-cache: true
+          enable-cache: false
 
       - name: Build package
         run: uv build
