@@ -1,6 +1,19 @@
-# pytest-vigil
+<div align="center">
 
-> Modern pytest plugin for total test suite reliability.
+![pytest-vigil](https://socialify.git.ci/l0kifs/pytest-vigil/image?description=1&font=Inter&language=1&name=1&owner=1&pattern=Signal&theme=Light)
+
+# Pytest Vigil - Reliability Vigilance for Pytest
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+![GitHub last commit](https://img.shields.io/github/last-commit/l0kifs/pytest-vigil)
+![GitHub Release Date](https://img.shields.io/github/release-date/l0kifs/pytest-vigil?label=last%20release)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/pytest-vigil?label=pypi%20downloads)
+![GitHub repo size](https://img.shields.io/github/repo-size/l0kifs/pytest-vigil)
+
+
+
+</div>
 
 ## Features
 
