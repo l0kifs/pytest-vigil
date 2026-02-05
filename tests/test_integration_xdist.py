@@ -1,5 +1,4 @@
 import pytest
-import sys
 
 pytest_plugins = ["pytester"]
 
@@ -29,15 +28,12 @@ def test_xdist_parallel_execution(pytester):
     # Analyze results
     # test_pass should pass
     # test_timeout should fail with Vigil timeout
-    
-    # In xdist mode, output is like "[gw0] [ 50%] PASSED test_xdist_parallel_execution.py::test_pass"
     result.stdout.fnmatch_lines([
         "*PASSED*test_pass*",
         "*FAILED*test_timeout*"
     ])
     
     # Check for the timeout message in the output
-    # Since it's xdist, the output from workers is collected
     stdout_str = result.stdout.str()
     stderr_str = result.stderr.str()
     full_output = stdout_str + stderr_str
@@ -107,9 +103,6 @@ def test_xdist_resource_isolation_cpu(pytester):
         "*FAILED*test_cpu_worker*"
     ])
     
-    stdout_str = result.stdout.str()
-    if "Policy violation" not in stdout_str:
-         # Sometimes xdist captures it differently or in stderr
-         # Just ensuring it failed is a good start, but we really want to check the message
-         pass
-         
+    # Ensure it failed potentially due to Vigil (though not strictly asserting message here per original code,
+    # but good to have implicit check via failure)
+    pass

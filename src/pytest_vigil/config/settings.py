@@ -47,6 +47,24 @@ class Settings(BaseSettings):
         default=True,
         description="Whether to enforce strict mode for monitoring."
     )
+    
+    # Advanced features
+    ci_multiplier: float = Field(
+        default=2.0,
+        description="Multiplier for resource limits when running in CI environment."
+    )
+    retry_count: int = Field(
+        default=0,
+        description="Number of retries for failed/violation tests. 0 means disabled."
+    )
+    stall_timeout: Optional[float] = Field(
+        default=None,
+        description="Timeout in seconds for low request/cpu activity to detect deadlocks."
+    )
+    stall_cpu_threshold: float = Field(
+        default=0.1,
+        description="CPU percentage threshold below which is considered 'stalled' if exceeded stall_timeout."
+    )
 
 
 def get_settings() -> Settings:

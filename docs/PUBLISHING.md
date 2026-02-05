@@ -7,9 +7,9 @@ This project uses [UV](https://docs.astral.sh/uv/) as the package manager and Gi
 1. **PyPI Account**: Create an account at [https://pypi.org/](https://pypi.org/)
 2. **Trusted Publishing**: Configure trusted publishing (no API tokens needed!) at [https://pypi.org/manage/account/publishing/](https://pypi.org/manage/account/publishing/)
    - Add a new publisher with:
-     - PyPI Project Name: `todo-list-mcp`
+     - PyPI Project Name: `pytest-vigil`
      - Owner: `l0kifs`
-     - Repository name: `todo-list-mcp`
+     - Repository name: `pytest-vigil`
      - Workflow name: `publish-to-pypi.yml`
      - Environment name: (leave blank)
 
@@ -22,7 +22,7 @@ The project is configured to automatically publish to PyPI when a new GitHub rel
    version = "0.2.0"  # Update to your new version
    ```
 
-2. **Update version** in `src/todo_list_mcp/settings.py`:
+2. **Update version** in `src/pytest_vigil/settings.py`:
    ```python
    app_version: str = Field(default="0.2.0", description="Application version")
   # Update to your new version
@@ -47,7 +47,7 @@ The project is configured to automatically publish to PyPI when a new GitHub rel
    ```
    
    Or using GitHub web interface:
-   - Go to [https://github.com/l0kifs/todo-list-mcp/releases/new](https://github.com/l0kifs/todo-list-mcp/releases/new)
+   - Go to [https://github.com/l0kifs/pytest-vigil/releases/new](https://github.com/l0kifs/pytest-vigil/releases/new)
    - Create a new tag (e.g., `v0.2.0`)
    - Add release title and description
    - Click "Publish release"
@@ -100,7 +100,7 @@ Before publishing to the main PyPI, you can test on TestPyPI:
 
 3. Test installation:
    ```bash
-   pip install --index-url https://test.pypi.org/simple/ jira-cli
+   pip install --index-url https://test.pypi.org/simple/ pytest-vigil
    ```
 
 ## Best Practices

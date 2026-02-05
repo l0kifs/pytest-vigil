@@ -9,11 +9,13 @@ class InteractionType(str, Enum):
     CPU = "cpu"
     MEMORY = "memory"
     TIME = "time"
+    STALL = "stall"
 
 class ResourceLimit(BaseModel):
     """Defines a limit for a specific resource."""
     limit_type: InteractionType
     threshold: float
+    secondary_threshold: Optional[float] = None # For STALL: this is CPU limit, threshold is Time
     strict: bool = True
     
     model_config = ConfigDict(frozen=True)
@@ -38,6 +40,7 @@ class TestExecution(BaseModel):
     start_time: datetime = Field(default_factory=datetime.now)
     measurements: List[ExecutionMeasurement] = Field(default_factory=list)
     outcome: Optional[TestOutcome] = None
+    retry_attempt: int = 0
 
     def add_measurement(self, cpu: float, memory: float) -> None:
         self.measurements.append(ExecutionMeasurement(
