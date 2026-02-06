@@ -1,6 +1,6 @@
 <div align="center">
 
-![pytest-vigil](https://socialify.git.ci/l0kifs/pytest-vigil/image?description=1&font=Inter&language=1&name=1&owner=1&pattern=Signal&theme=Light)
+![pytest-vigil](https://socialify.git.ci/l0kifs/pytest-vigil/image?description=0&font=Inter&language=1&name=1&owner=1&pattern=Signal&theme=Light)
 
 # Pytest Vigil - Reliability Vigilance for Pytest
 
