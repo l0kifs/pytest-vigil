@@ -39,7 +39,34 @@ The project is configured to automatically publish to PyPI when a new GitHub rel
 
 3. **Create a GitHub release**:
    
-   Using GitHub CLI (recommended):
+   Using GitHub CLI with release notes file (recommended):
+   ```bash
+   # Create a release notes file
+   cat > .release-notes-v0.2.0.md << 'EOF'
+   ## 🎯 New Features
+   - Feature 1 description
+   - Feature 2 description
+   
+   ## 🐛 Bug Fixes
+   - Fix 1 description
+   
+   ## 📚 Documentation
+   - Doc updates
+   
+   ## 🔗 Full Changelog
+   See [CHANGELOG.md](https://github.com/l0kifs/pytest-vigil/blob/v0.2.0/CHANGELOG.md)
+   EOF
+   
+   # Create the release
+   gh release create v0.2.0 \
+     --title "v0.2.0 - Release Title" \
+     --notes-file .release-notes-v0.2.0.md
+   
+   # Clean up
+   rm .release-notes-v0.2.0.md
+   ```
+   
+   Or using inline notes:
    ```bash
    gh release create v0.2.0 \
      --title "v0.2.0 - Release Title" \
