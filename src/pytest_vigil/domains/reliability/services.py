@@ -30,21 +30,29 @@ class PolicyService:
                 if cpu > limit.threshold:
                     return limit
             elif limit.limit_type == InteractionType.STALL:
-                # Stall logic: if duration > threshold (wait time) AND cpu < secondary_threshold
-                # We need access to history to properly detect stall over time, 
-                # strictly speaking, "Stall" means "low CPU for at least X seconds".
-                # Simplify: if current duration > X and *average* CPU of cached measurements (last 1s?) is low?
-                # Or simplistic: if we are over stall timeout, check ONLY the current CPU. 
-                # Better: Check if ALL measurements in the last `limit.threshold` seconds are below `secondary_threshold`.
-                if duration > limit.threshold:
-                     # Get measurements within the last `limit.threshold` seconds
-                     # Actually, `threshold` is the time window we want to see inactivity.
-                     # But `duration` keeps growing. We need to check if the *last X seconds* were idle.
-                     # Since we don't have a sophisticated rolling window here easily without history traversal:
-                     # Naive approach: if current CPU < limit.secondary_threshold and duration > limit.threshold.
-                     # This might trigger false positives if the test simply waits for I/O.
-                     # But "Deadlock Detection" usually implies strictness.
-                     if limit.secondary_threshold is not None and cpu < limit.secondary_threshold:
-                         return limit
+                # Stall detection: Check if CPU has been consistently low for at least `limit.threshold` seconds
+                # threshold = stall_timeout (time window, e.g., 0.5s)
+                # secondary_threshold = stall_cpu_threshold (CPU percentage, e.g., 1.0%)
+                if limit.secondary_threshold is not None and execution.measurements and duration >= limit.threshold:
+                    # Only check after test has been running for at least stall_timeout
+                    # Get current time
+                    from datetime import datetime, timedelta
+                    now = datetime.now()
+                    stall_window_start = now - timedelta(seconds=limit.threshold)
+                    
+                    # Find measurements within the stall time window (last `stall_timeout` seconds)
+                    window_measurements = [
+                        m for m in execution.measurements 
+                        if m.timestamp >= stall_window_start
+                    ]
+                    
+                    # Check if all measurements in window show low CPU
+                    if window_measurements:
+                        all_below_threshold = all(
+                            m.cpu_percent <= limit.secondary_threshold 
+                            for m in window_measurements
+                        )
+                        if all_below_threshold:
+                            return limit
 
         return None

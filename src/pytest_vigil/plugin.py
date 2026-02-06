@@ -3,7 +3,6 @@
 import pytest
 import os
 import json
-import psutil
 from datetime import datetime, timezone
 from loguru import logger
 from _pytest.runner import runtestprotocol
@@ -12,19 +11,21 @@ from pytest_vigil.domains.reliability.services import PolicyService
 from pytest_vigil.infrastructure.monitoring.loop import VigilMonitor
 from pytest_vigil.infrastructure.monitoring.session import SessionMonitor
 from pytest_vigil.infrastructure.enforcement.interrupt import Interrupter
-from pytest_vigil.infrastructure.enforcement.signals import SignalManager, TimeoutException
+from pytest_vigil.infrastructure.enforcement.signals import SignalManager
 from pytest_vigil.config import get_settings
 
 # Store execution results for reporting
 _execution_results = []
 _flaky_tests = []
 _session_monitor = None
+_current_test_nodeid = None
 
 def pytest_sessionstart(session):
     """Initialize global result storage and session monitor."""
-    global _execution_results, _flaky_tests, _session_monitor
+    global _execution_results, _flaky_tests, _session_monitor, _current_test_nodeid
     _execution_results = []
     _flaky_tests = []
+    _current_test_nodeid = None
     
     # Setup session-level timeout if configured
     settings = get_settings()
@@ -48,7 +49,8 @@ def pytest_sessionstart(session):
         
         _session_monitor = SessionMonitor(
             timeout=session_timeout,
-            grace_period=grace_period
+            grace_period=grace_period,
+            get_current_test=lambda: _current_test_nodeid
         )
         _session_monitor.start()
         logger.info(f"Session timeout set to {session_timeout}s (CI multiplier: {multiplier}x)")
@@ -116,6 +118,18 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "vigil(**kwargs): Test reliability policies (timeout, memory, cpu, retry, stall_timeout)")
     # Ensure loguru doesn't interfere too much with pytest capture
     pass
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    """Track which test is currently running for session timeout reporting."""
+    global _current_test_nodeid
+    _current_test_nodeid = item.nodeid
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_teardown(item):
+    """Clear current test tracking after test completes."""
+    global _current_test_nodeid
+    _current_test_nodeid = None
 
 def pytest_sessionfinish(session, exitstatus):
     """
@@ -235,9 +249,13 @@ def pytest_runtest_protocol(item, nextitem):
     policy_service = PolicyService()
 
     reports = []
+    global _current_test_nodeid
     
     try:
         for attempt in range(retry_count + 1):
+            # Track current test for session timeout reporting
+            _current_test_nodeid = item.nodeid
+            
             item.ihook.pytest_runtest_logstart(nodeid=item.nodeid, location=item.location)
             
             execution = TestExecution(item_id=item.nodeid, node_id=item.nodeid, retry_attempt=attempt)
@@ -277,7 +295,7 @@ def pytest_runtest_protocol(item, nextitem):
                     "duration": execution.duration,
                     "max_cpu": max_cpu,
                     "max_memory": max_mem,
-                    "limits": [l.model_dump(mode='json') for l in limits]
+                    "limits": [limit.model_dump(mode='json') for limit in limits]
                 })
 
             # Check if passed
@@ -292,6 +310,7 @@ def pytest_runtest_protocol(item, nextitem):
                 if attempt > 0:
                     _flaky_tests.append(item.nodeid)
                 item.ihook.pytest_runtest_logfinish(nodeid=item.nodeid, location=item.location)
+                _current_test_nodeid = None
                 return True
             
             # If failed and attempts left
@@ -301,6 +320,7 @@ def pytest_runtest_protocol(item, nextitem):
                 item.ihook.pytest_runtest_logfinish(nodeid=item.nodeid, location=item.location)
                 
     finally:
+        _current_test_nodeid = None
         signal_manager.restore()
 
     return True

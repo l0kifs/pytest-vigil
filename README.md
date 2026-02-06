@@ -44,7 +44,7 @@ pip install pytest-vigil
 | `--vigil-cpu` | `%` | No | `None` | CPU limit |
 | `--vigil-retry` | - | No | `0` | Number of retries on failure |
 | `--vigil-stall-timeout` | `s` | No | `None` | Max duration of low CPU activity |
-| `--vigil-stall-cpu-threshold` | `%` | No | `0.1` | CPU threshold for stall detection |
+| `--vigil-stall-cpu-threshold` | `%` | No | `1.0` | CPU threshold for stall detection |
 | `--vigil-session-timeout` | `s` | No | `None` | Global timeout for entire test run |
 | `--vigil-session-timeout-grace-period` | `s` | No | `5.0` | Grace period before forceful termination |
 | `--vigil-report` | - | No | `None` | Path to JSON report file |
@@ -85,7 +85,7 @@ Apply limits to specific tests. All arguments are optional.
 | `cpu` | `float` | `%` | `None` | CPU limit |
 | `retry` | `int` | - | `0` | Number of retries on failure |
 | `stall_timeout` | `float` | `s` | `None` | Max duration of low CPU activity |
-| `stall_cpu_threshold`| `float` | `%` | `0.1` | CPU threshold for stall detection |
+| `stall_cpu_threshold`| `float` | `%` | `1.0` | CPU threshold for stall detection |
 
 ```python
 import pytest

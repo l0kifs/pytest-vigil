@@ -33,7 +33,7 @@ def test_session_timeout_cli_option(pytester):
     output = result.stdout.str() + result.stderr.str()
     # Either we see the session monitor start or the process was terminated
     # Exit codes: 143/137 (positive) or -15/-9 (negative signal numbers)
-    assert "Session monitor started" in output or "Session timeout" in output or result.ret in [143, 1, -15, -9]
+    assert "Session monitor started" in output or "Session timeout" in output or result.ret in [124, 143, 1, -15, -9]
 
 
 def test_session_timeout_env_var(pytester, monkeypatch):
@@ -60,7 +60,7 @@ def test_session_timeout_env_var(pytester, monkeypatch):
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
     # Verify session monitor was initialized with the env var value
-    assert "Session monitor started" in output or result.ret in [143, 1, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 1, -15, -9]
 
 
 def test_session_timeout_cli_overrides_env(pytester, monkeypatch):
@@ -85,7 +85,7 @@ def test_session_timeout_cli_overrides_env(pytester, monkeypatch):
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
     # Verify session monitor started with CLI value
-    assert "Session monitor started" in output or result.ret in [143, 1, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 1, -15, -9]
 
 
 def test_session_timeout_longer_than_suite(pytester):
@@ -125,7 +125,7 @@ def test_session_timeout_very_short(pytester):
     
     # With very short timeout, process will likely be terminated
     # Exit codes: 0 (passed fast enough), 1 (failed/incomplete), 143 (SIGTERM), 137 (SIGKILL), -15/-9 (negative signals)
-    assert result.ret in [0, 1, 143, 137, -15, -9]
+    assert result.ret in [0, 1, 124, 143, 137, -15, -9]
 
 
 def test_session_timeout_with_ci_multiplier(pytester, monkeypatch):
@@ -189,7 +189,7 @@ def test_session_timeout_with_xdist(pytester):
     # With 2 workers, tests should complete in ~1 second, under the 1.5s timeout
     # May pass, fail, or be terminated depending on timing
     # Exit codes: 0 (pass), 1 (fail), 143 (SIGTERM), 137 (SIGKILL), -15 (SIGTERM negative), -9 (SIGKILL negative)
-    assert result.ret in [0, 1, 143, 137, -15, -9]
+    assert result.ret in [0, 1, 124, 143, 137, -15, -9]
 
 
 def test_session_timeout_with_per_test_timeout(pytester):
@@ -274,7 +274,7 @@ def test_session_timeout_graceful_shutdown(pytester):
     
     # Verify session monitor was started
     output = result.stdout.str() + result.stderr.str()
-    assert "Session monitor started" in output or result.ret in [143, 137, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 137, -15, -9]
     
     # Graceful shutdown with SIGTERM should allow cleanup
     # Note: atexit may not run reliably in all cases, but we verify no crash
@@ -334,7 +334,7 @@ def test_session_timeout_zero_value(pytester):
     
     # Zero timeout will trigger immediately
     # Exit codes: 0 (if no tests started), 1 (incomplete), 5 (NO_TESTS_COLLECTED), 143/137 (SIGTERM/SIGKILL), -15/-9 (negative signals)
-    assert result.ret in [0, 1, 5, 143, 137, -15, -9]
+    assert result.ret in [0, 1, 5, 124, 143, 137, -15, -9]
 
 
 def test_session_timeout_no_tests(pytester):
@@ -425,6 +425,86 @@ def test_session_timeout_does_not_affect_normal_failures(pytester):
     result.assert_outcomes(passed=1, failed=1)
 
 
+def test_session_timeout_exit_code_124(pytester):
+    """Test that session timeout exits with code 124 (GNU timeout convention)."""
+    pytester.makepyfile("""
+        import time
+        import pytest
+
+        def test_quick():
+            time.sleep(0.1)
+
+        def test_hanging():
+            time.sleep(10.0)
+    """)
+
+    # Set short timeout that will trigger
+    result = pytester.runpytest_subprocess("--vigil-session-timeout=1", "-s", "-v")
+    
+    # Should exit with code 124 (timeout exit code)
+    assert result.ret == 124, f"Expected exit code 124, got {result.ret}"
+    
+    output = result.stdout.str() + result.stderr.str()
+    # Verify timeout occurred
+    assert "SESSION TIMEOUT EXCEEDED" in output or "Session timeout" in output
+
+
+def test_session_timeout_shows_current_test(pytester):
+    """Test that session timeout message shows which test was executing."""
+    pytester.makepyfile("""
+        import time
+        import pytest
+
+        def test_quick():
+            time.sleep(0.1)
+
+        def test_slow_hanging_test():
+            '''This test will be running when timeout triggers.'''
+            time.sleep(10.0)
+    """)
+
+    # Set timeout that will trigger during second test
+    result = pytester.runpytest_subprocess("--vigil-session-timeout=1", "-s", "-v")
+    
+    # Should be terminated
+    assert result.ret != 0
+    
+    output = result.stdout.str() + result.stderr.str()
+    
+    # Verify the timeout message includes the test name
+    assert "Currently executing test:" in output or "test_slow_hanging_test" in output, \
+        f"Expected test name in output, but got:\n{output}"
+    
+    # Verify the banner is displayed
+    assert "SESSION TIMEOUT EXCEEDED" in output or "Session timeout exceeded" in output
+
+
+def test_session_timeout_clean_exit_no_resource_leaks(pytester):
+    """Test that session timeout exits cleanly without resource leak warnings."""
+    pytester.makepyfile("""
+        import time
+        import pytest
+
+        def test_quick():
+            time.sleep(0.1)
+
+        def test_hanging():
+            time.sleep(10.0)
+    """)
+
+    result = pytester.runpytest_subprocess("--vigil-session-timeout=1", "-s", "-v")
+    
+    # Should exit with timeout code
+    assert result.ret == 124
+    
+    output = result.stdout.str() + result.stderr.str()
+    
+    # Should NOT have resource tracker warnings about leaked semaphores
+    # (This was the issue with the old implementation)
+    assert "leaked semaphore" not in output.lower(), \
+        f"Found resource leak warning in output:\n{output}"
+
+
 def test_session_timeout_grace_period_cli_option(pytester):
     """Test that grace period can be set via CLI option."""
     pytester.makepyfile("""
@@ -445,7 +525,7 @@ def test_session_timeout_grace_period_cli_option(pytester):
     # Should be terminated
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
-    assert "Session monitor started" in output or result.ret in [143, 137, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 137, -15, -9]
 
 
 def test_session_timeout_grace_period_cli_overrides_env(pytester, monkeypatch):
@@ -470,7 +550,7 @@ def test_session_timeout_grace_period_cli_overrides_env(pytester, monkeypatch):
     # Should be terminated
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
-    assert "Session monitor started" in output or result.ret in [143, 137, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 137, -15, -9]
 
 
 def test_session_timeout_grace_period_env_var(pytester, monkeypatch):
@@ -491,4 +571,4 @@ def test_session_timeout_grace_period_env_var(pytester, monkeypatch):
     # Should be terminated
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
-    assert "Session monitor started" in output or result.ret in [143, 137, -15, -9]
+    assert "Session monitor started" in output or result.ret in [124, 143, 137, -15, -9]

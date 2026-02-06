@@ -1,10 +1,10 @@
 """Session-level monitoring for global test run timeout."""
 
 import os
-import signal
 import threading
 import time
-from typing import Optional
+from typing import Optional, Callable
+import psutil
 from loguru import logger
 
 
@@ -13,22 +13,26 @@ class SessionMonitor:
     
     Monitors the total execution time of a test run and terminates it if
     the global timeout is exceeded. First attempts graceful termination,
-    then forcefully kills the process if needed.
+    then forcefully kills the process if needed. Properly handles cleanup
+    of child processes including pytest-xdist workers.
     """
 
     def __init__(
         self,
         timeout: float,
         grace_period: float = 5.0,
+        get_current_test: Optional[Callable[[], Optional[str]]] = None,
     ):
         """Initialize the session monitor.
         
         Args:
             timeout: Maximum duration in seconds for the test session
             grace_period: Time in seconds to wait for graceful termination before forcing
+            get_current_test: Optional callback to retrieve currently executing test nodeid
         """
         self.timeout = timeout
         self.grace_period = grace_period
+        self.get_current_test = get_current_test
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._start_time: Optional[float] = None
@@ -70,55 +74,98 @@ class SessionMonitor:
             self._stop_event.wait(sleep_time)
 
     def _handle_timeout(self) -> None:
-        """Handle session timeout by attempting graceful then forceful termination."""
-        pid = os.getpid()
-        logger.error(
-            f"Session timeout exceeded ({self.timeout}s). "
-            f"Attempting graceful termination..."
-        )
-
-        # Attempt graceful termination
+        """Handle session timeout by terminating child processes and exiting."""
+        import sys
+        
+        # Get currently executing test if available
+        current_test = None
+        if self.get_current_test:
+            current_test = self.get_current_test()
+        
+        # Create detailed timeout message
+        timeout_msg = f"\n{'='*70}\nSESSION TIMEOUT EXCEEDED ({self.timeout}s)\n{'='*70}\n"
+        
+        if current_test:
+            timeout_msg += f"Currently executing test: {current_test}\n"
+            logger.error(
+                f"Session timeout exceeded ({self.timeout}s). "
+                f"Currently executing test: {current_test}"
+            )
+        else:
+            timeout_msg += "No test currently executing (or test tracking not available)\n"
+            logger.error(f"Session timeout exceeded ({self.timeout}s)")
+        
+        timeout_msg += f"{'='*70}\n"
+        
+        # Write to stderr using file descriptor directly to bypass any buffering
         try:
-            if hasattr(signal, "SIGTERM"):
-                logger.warning(f"Sending SIGTERM to process {pid}")
-                os.kill(pid, signal.SIGTERM)
-            elif hasattr(signal, "SIGINT"):
-                logger.warning(f"Sending SIGINT to process {pid}")
-                os.kill(pid, signal.SIGINT)
-            else:
-                # No graceful signal available, go straight to forceful
-                logger.warning("No graceful termination signal available")
-                self._force_kill()
-                return
-        except Exception as e:
-            logger.error(f"Error during graceful termination: {e}")
-            self._force_kill()
-            return
-
-        # Wait for grace period
-        logger.info(f"Waiting {self.grace_period}s for graceful shutdown...")
-        time.sleep(self.grace_period)
-
-        # If we're still running, force kill
-        if not self._stop_event.is_set():
-            self._force_kill()
-
-    def _force_kill(self) -> None:
-        """Forcefully terminate the test run process."""
-        pid = os.getpid()
-        logger.error(
-            f"Forcefully terminating test run after grace period. "
-            f"Sending SIGKILL to process {pid}"
-        )
+            stderr_fd = 2
+            os.write(stderr_fd, timeout_msg.encode('utf-8'))
+        except Exception:
+            # Fallback to sys.stderr if direct write fails
+            sys.stderr.write(timeout_msg)
+            sys.stderr.flush()
+        
+        # Terminate child processes first
+        logger.info("Terminating child processes...")
+        self._terminate_child_processes()
+        
+        # Give a brief moment for children to exit
+        time.sleep(0.5)
+        
+        logger.error("Forcing test session to exit due to timeout")
+        
+        # Flush all output streams
         try:
-            if hasattr(signal, "SIGKILL"):
-                os.kill(pid, signal.SIGKILL)
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception:
+            pass
+        
+        # Use os._exit to force immediate termination from daemon thread
+        # Exit code 124 is commonly used for timeout (like GNU timeout command)
+        os._exit(124)
+
+    def _terminate_child_processes(self) -> None:
+        """Terminate all child processes including xdist workers."""
+        try:
+            current_process = psutil.Process(os.getpid())
+            children = current_process.children(recursive=True)
+            
+            if children:
+                logger.info(f"Terminating {len(children)} child process(es)...")
+                for child in children:
+                    try:
+                        logger.debug(f"Terminating child process {child.pid}: {child.name()}")
+                        child.terminate()
+                    except psutil.NoSuchProcess:
+                        pass
+                    except Exception as e:
+                        logger.warning(f"Error terminating child process {child.pid}: {e}")
+                
+                # Give children time to terminate gracefully
+                gone, alive = psutil.wait_procs(children, timeout=3)
+                
+                if gone:
+                    logger.debug(f"Successfully terminated {len(gone)} child process(es)")
+                
+                # Force kill any remaining children
+                if alive:
+                    logger.warning(f"Force killing {len(alive)} remaining child process(es)")
+                    for child in alive:
+                        try:
+                            logger.debug(f"Force killing child process {child.pid}")
+                            child.kill()
+                        except psutil.NoSuchProcess:
+                            pass
+                        except Exception as e:
+                            logger.warning(f"Error killing child process {child.pid}: {e}")
+                    
+                    # Final wait to confirm
+                    psutil.wait_procs(alive, timeout=1)
             else:
-                # Fallback for systems without SIGKILL
-                logger.error("SIGKILL not available, using sys.exit()")
-                import sys
-                sys.exit(1)
+                logger.debug("No child processes to terminate")
         except Exception as e:
-            logger.error(f"Error during forced termination: {e}")
-            import sys
-            sys.exit(1)
+            logger.error(f"Error terminating child processes: {e}")
+
+

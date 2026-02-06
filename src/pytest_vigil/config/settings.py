@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = Field(default="pytest-vigil", description="Application name")
-    app_version: str = Field(default="0.3.0", description="Application version")
+    app_version: str = Field(default="0.4.0", description="Application version")
 
     # Default global limits (if not specified via CLI or Marker)
     timeout: Optional[float] = Field(
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
         description="Timeout in seconds for low request/cpu activity to detect deadlocks."
     )
     stall_cpu_threshold: float = Field(
-        default=0.1,
+        default=1.0,
         description="CPU percentage threshold below which is considered 'stalled' if exceeded stall_timeout."
     )
     

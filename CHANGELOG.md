@@ -16,6 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.4.0] - 2026-02-06
+
+### Changed
+- Default stall CPU threshold increased from 0.1% to 1.0% for more reliable detection
+- Improved stall detection logic to use time-window-based measurement instead of single-point CPU check
+- Enhanced session timeout implementation with better child process cleanup (including xdist workers)
+- Session timeout now shows currently executing test in timeout message
+- Session timeout exits with code 124 (GNU timeout convention)
+- Improved session timeout cleanup to prevent resource leaks (semaphore leaks fixed)
+- Session monitor now tracks current test nodeid for better timeout reporting
+
+### Removed
+- Consolidated test files: removed test_ci_multiplier.py, test_config.py, test_integration_xdist.py, test_markers.py
+- Tests merged into comprehensive test suites: test_resource_limits.py, test_retry_mechanism.py, test_stall_detection.py, test_json_report.py, test_session_timeout.py
+
+### Fixed
+- Session timeout now properly terminates child processes including pytest-xdist workers
+- Stall detection now correctly evaluates CPU activity over time window instead of instantaneous measurement
+- Session timeout no longer leaves resource tracker warnings about leaked semaphores
+
 ## [0.3.0] - 2026-02-06
 
 ### Added
@@ -61,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/l0kifs/pytest-vigil/releases/tag/v0.1.0
