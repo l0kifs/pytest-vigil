@@ -52,6 +52,18 @@ def pytest_addoption(parser):
         help="Number of retries for failed/violation tests"
     )
     group.addoption(
+        "--vigil-stall-timeout",
+        action="store",
+        dest="vigil_stall_timeout",
+        help="Max duration in seconds of low CPU activity for stall detection"
+    )
+    group.addoption(
+        "--vigil-stall-cpu-threshold",
+        action="store",
+        dest="vigil_stall_cpu_threshold",
+        help="CPU threshold in % for stall detection"
+    )
+    group.addoption(
         "--vigil-report",
         action="store",
         dest="vigil_report",
@@ -118,6 +130,14 @@ def pytest_runtest_protocol(item, nextitem):
     cli_retry = item.config.getoption("vigil_retry")
     if cli_retry is not None:
         retry_count = int(cli_retry)
+    
+    cli_stall_timeout = item.config.getoption("vigil_stall_timeout")
+    if cli_stall_timeout is not None:
+        stall_timeout = float(cli_stall_timeout)
+    
+    cli_stall_threshold = item.config.getoption("vigil_stall_cpu_threshold")
+    if cli_stall_threshold is not None:
+        stall_threshold = float(cli_stall_threshold)
 
     # 3. Overrides from Markers
     marker = item.get_closest_marker("vigil")

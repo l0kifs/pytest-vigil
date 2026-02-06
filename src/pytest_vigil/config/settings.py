@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = Field(default="pytest-vigil", description="Application name")
-    app_version: str = Field(default="0.1.0", description="Application version")
+    app_version: str = Field(default="0.2.0", description="Application version")
 
     # Default global limits (if not specified via CLI or Marker)
     timeout: Optional[float] = Field(

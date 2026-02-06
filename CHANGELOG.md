@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.2.0] - 2026-02-06
+
+### Added
+- CLI option `--vigil-stall-timeout` for global stall timeout configuration
+- CLI option `--vigil-stall-cpu-threshold` for global stall CPU threshold configuration
+- Comprehensive test coverage for new stall-related CLI options
+- Tests validating proper override hierarchy (ENV → CLI → Marker) for stall parameters
+
+### Changed
+- Extended CLI configuration capabilities to include all stall detection parameters
+
 ## [0.1.0] - 2026-02-06
 
 ### Added
@@ -33,5 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/l0kifs/pytest-vigil/releases/tag/v0.1.0

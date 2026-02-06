@@ -8,9 +8,9 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 ![GitHub last commit](https://img.shields.io/github/last-commit/l0kifs/pytest-vigil)
 ![GitHub Release Date](https://img.shields.io/github/release-date/l0kifs/pytest-vigil?label=last%20release)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/pytest-vigil?label=pypi%20downloads)
 ![GitHub repo size](https://img.shields.io/github/repo-size/l0kifs/pytest-vigil)
-
+![PyPI - Downloads](https://img.shields.io/pypi/dm/pytest-vigil?label=pypi%20downloads)
+[![PyPI version](https://img.shields.io/pypi/v/pytest-vigil.svg)](https://pypi.org/project/pytest-vigil/)
 
 
 </div>
@@ -42,6 +42,8 @@ pip install pytest-vigil
 | `--vigil-memory` | `MB` | No | `None` | Memory limit |
 | `--vigil-cpu` | `%` | No | `None` | CPU limit |
 | `--vigil-retry` | - | No | `0` | Number of retries on failure |
+| `--vigil-stall-timeout` | `s` | No | `None` | Max duration of low CPU activity |
+| `--vigil-stall-cpu-threshold` | `%` | No | `0.1` | CPU threshold for stall detection |
 | `--vigil-report` | - | No | `None` | Path to JSON report file |
 
 ```bash
