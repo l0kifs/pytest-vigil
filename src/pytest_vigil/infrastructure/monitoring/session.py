@@ -22,6 +22,7 @@ class SessionMonitor:
         timeout: float,
         grace_period: float = 5.0,
         get_current_test: Optional[Callable[[], Optional[str]]] = None,
+        get_last_test: Optional[Callable[[], Optional[str]]] = None,
     ):
         """Initialize the session monitor.
         
@@ -29,10 +30,12 @@ class SessionMonitor:
             timeout: Maximum duration in seconds for the test session
             grace_period: Time in seconds to wait for graceful termination before forcing
             get_current_test: Optional callback to retrieve currently executing test nodeid
+            get_last_test: Optional callback to retrieve last executed test nodeid
         """
         self.timeout = timeout
         self.grace_period = grace_period
         self.get_current_test = get_current_test
+        self.get_last_test = get_last_test
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._start_time: Optional[float] = None
@@ -82,6 +85,11 @@ class SessionMonitor:
         if self.get_current_test:
             current_test = self.get_current_test()
         
+        # Get last executed test if available
+        last_test = None
+        if self.get_last_test:
+            last_test = self.get_last_test()
+        
         # Create detailed timeout message
         timeout_msg = f"\n{'='*70}\nSESSION TIMEOUT EXCEEDED ({self.timeout}s)\n{'='*70}\n"
         
@@ -90,6 +98,13 @@ class SessionMonitor:
             logger.error(
                 f"Session timeout exceeded ({self.timeout}s). "
                 f"Currently executing test: {current_test}"
+            )
+        elif last_test:
+            timeout_msg += f"Last executed test: {last_test}\n"
+            timeout_msg += "(Timeout occurred between tests)\n"
+            logger.error(
+                f"Session timeout exceeded ({self.timeout}s). "
+                f"Last executed test: {last_test}. Timeout occurred between tests."
             )
         else:
             timeout_msg += "No test currently executing (or test tracking not available)\n"

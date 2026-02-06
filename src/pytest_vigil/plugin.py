@@ -19,13 +19,15 @@ _execution_results = []
 _flaky_tests = []
 _session_monitor = None
 _current_test_nodeid = None
+_last_test_nodeid = None
 
 def pytest_sessionstart(session):
     """Initialize global result storage and session monitor."""
-    global _execution_results, _flaky_tests, _session_monitor, _current_test_nodeid
+    global _execution_results, _flaky_tests, _session_monitor, _current_test_nodeid, _last_test_nodeid
     _execution_results = []
     _flaky_tests = []
     _current_test_nodeid = None
+    _last_test_nodeid = None
     
     # Setup session-level timeout if configured
     settings = get_settings()
@@ -50,7 +52,8 @@ def pytest_sessionstart(session):
         _session_monitor = SessionMonitor(
             timeout=session_timeout,
             grace_period=grace_period,
-            get_current_test=lambda: _current_test_nodeid
+            get_current_test=lambda: _current_test_nodeid,
+            get_last_test=lambda: _last_test_nodeid
         )
         _session_monitor.start()
         logger.info(f"Session timeout set to {session_timeout}s (CI multiplier: {multiplier}x)")
@@ -129,12 +132,13 @@ def pytest_configure(config):
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
     """Track which test is currently running for session timeout reporting."""
-    global _current_test_nodeid
+    global _current_test_nodeid, _last_test_nodeid
     _current_test_nodeid = item.nodeid
+    _last_test_nodeid = item.nodeid
 
 @pytest.hookimpl(trylast=True)
 def pytest_runtest_teardown(item):
-    """Clear current test tracking after test completes."""
+    """Clear current test tracking after test completes, keeping last test stored."""
     global _current_test_nodeid
     _current_test_nodeid = None
 

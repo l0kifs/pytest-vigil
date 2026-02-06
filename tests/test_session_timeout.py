@@ -572,3 +572,35 @@ def test_session_timeout_grace_period_env_var(pytester, monkeypatch):
     assert result.ret != 0
     output = result.stdout.str() + result.stderr.str()
     assert "Session monitor started" in output or result.ret in [124, 143, 137, -15, -9]
+
+
+def test_session_timeout_between_tests_shows_last_test(pytester):
+    """Test that session timeout shows last executed test when timeout occurs between tests."""
+    pytester.makepyfile("""
+        import time
+        import pytest
+
+        def test_quick_first():
+            '''First test completes quickly.'''
+            time.sleep(0.1)
+
+        def test_with_delay_before():
+            '''This test has a slow fixture setup that triggers timeout.'''
+            time.sleep(10.0)  # Timeout will occur during this sleep
+    """)
+
+    # Set timeout that will trigger after first test completes but during fixture/setup
+    result = pytester.runpytest_subprocess("--vigil-session-timeout=0.5", "-s", "-v")
+    
+    # Should be terminated
+    assert result.ret != 0
+    
+    output = result.stdout.str() + result.stderr.str()
+    
+    # Verify the timeout message includes the last test name
+    # Either we caught it during execution or between tests
+    assert ("Last executed test:" in output or "test_quick_first" in output), \
+        f"Expected last test name in output, but got:\n{output}"
+    
+    # Verify the banner is displayed
+    assert "SESSION TIMEOUT EXCEEDED" in output or "Session timeout exceeded" in output

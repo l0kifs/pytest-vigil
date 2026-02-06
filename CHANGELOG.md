@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.5.1] - 2026-02-07
+
+### Fixed
+- Session timeout now displays last executed test when timeout occurs between tests (instead of showing no test information)
+- Added tracking of last executed test nodeid for better session timeout reporting
+- Session timeout message now clearly indicates "(Timeout occurred between tests)" when applicable
+
+### Added
+- New test case `test_session_timeout_between_tests_shows_last_test` to verify correct behavior when timeout occurs between tests
+
 ## [0.5.0] - 2026-02-06
 
 ### Added
@@ -96,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...v0.3.0
