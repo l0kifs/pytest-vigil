@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.3.0] - 2026-02-06
+
+### Added
+- Global session timeout feature with `--vigil-session-timeout` CLI option
+- Configurable grace period for session timeout with `--vigil-session-timeout-grace-period` CLI option
+- SessionMonitor class with graceful (SIGTERM) and forceful (SIGKILL) termination
+- CI multiplier support for session timeout (automatically scales in CI environments)
+- Environment variable configuration for session timeout (`PYTEST_VIGIL__SESSION_TIMEOUT`)
+- Environment variable configuration for grace period (`PYTEST_VIGIL__SESSION_TIMEOUT_GRACE_PERIOD`)
+- Comprehensive test suite for session timeout (20 tests covering all scenarios)
+- Session timeout cleanup in pytest_sessionfinish hook
+- Integration with existing features (xdist, retries, stall detection, resource limits)
+
+### Changed
+- Updated README with Global Session Timeout section and usage examples
+- Enhanced CLI options table with session timeout parameters
+
 ## [0.2.0] - 2026-02-06
 
 ### Added
@@ -44,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/l0kifs/pytest-vigil/releases/tag/v0.1.0

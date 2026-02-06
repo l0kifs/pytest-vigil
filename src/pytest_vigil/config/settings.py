@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = Field(default="pytest-vigil", description="Application name")
-    app_version: str = Field(default="0.2.0", description="Application version")
+    app_version: str = Field(default="0.3.0", description="Application version")
 
     # Default global limits (if not specified via CLI or Marker)
     timeout: Optional[float] = Field(
@@ -64,6 +64,16 @@ class Settings(BaseSettings):
     stall_cpu_threshold: float = Field(
         default=0.1,
         description="CPU percentage threshold below which is considered 'stalled' if exceeded stall_timeout."
+    )
+    
+    # Session-level timeout
+    session_timeout: Optional[float] = Field(
+        default=None,
+        description="Global timeout in seconds for the entire test run session. If exceeded, pytest-vigil will terminate the test run."
+    )
+    session_timeout_grace_period: float = Field(
+        default=5.0,
+        description="Grace period in seconds after session timeout before forcefully killing the test run."
     )
 
 

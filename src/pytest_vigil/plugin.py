@@ -10,6 +10,7 @@ from _pytest.runner import runtestprotocol
 from pytest_vigil.domains.reliability.models import TestExecution, ResourceLimit, InteractionType
 from pytest_vigil.domains.reliability.services import PolicyService
 from pytest_vigil.infrastructure.monitoring.loop import VigilMonitor
+from pytest_vigil.infrastructure.monitoring.session import SessionMonitor
 from pytest_vigil.infrastructure.enforcement.interrupt import Interrupter
 from pytest_vigil.infrastructure.enforcement.signals import SignalManager, TimeoutException
 from pytest_vigil.config import get_settings
@@ -17,12 +18,40 @@ from pytest_vigil.config import get_settings
 # Store execution results for reporting
 _execution_results = []
 _flaky_tests = []
+_session_monitor = None
 
 def pytest_sessionstart(session):
-    """Initialize global result storage."""
-    global _execution_results, _flaky_tests
+    """Initialize global result storage and session monitor."""
+    global _execution_results, _flaky_tests, _session_monitor
     _execution_results = []
     _flaky_tests = []
+    
+    # Setup session-level timeout if configured
+    settings = get_settings()
+    session_timeout = settings.session_timeout
+    grace_period = settings.session_timeout_grace_period
+    
+    # CLI overrides
+    cli_session_timeout = session.config.getoption("vigil_session_timeout")
+    if cli_session_timeout is not None:
+        session_timeout = float(cli_session_timeout)
+    
+    cli_grace_period = session.config.getoption("vigil_session_timeout_grace_period")
+    if cli_grace_period is not None:
+        grace_period = float(cli_grace_period)
+    
+    if session_timeout is not None and session_timeout > 0:
+        # Apply CI multiplier if in CI environment
+        is_ci = os.getenv("CI", "false").lower() == "true" or os.getenv("GITHUB_ACTIONS")
+        multiplier = settings.ci_multiplier if is_ci else 1.0
+        session_timeout *= multiplier
+        
+        _session_monitor = SessionMonitor(
+            timeout=session_timeout,
+            grace_period=grace_period
+        )
+        _session_monitor.start()
+        logger.info(f"Session timeout set to {session_timeout}s (CI multiplier: {multiplier}x)")
 
 def pytest_addoption(parser):
     """Register command line options."""
@@ -69,6 +98,18 @@ def pytest_addoption(parser):
         dest="vigil_report",
         help="Path to generate JSON report"
     )
+    group.addoption(
+        "--vigil-session-timeout",
+        action="store",
+        dest="vigil_session_timeout",
+        help="Global timeout in seconds for the entire test run session"
+    )
+    group.addoption(
+        "--vigil-session-timeout-grace-period",
+        action="store",
+        dest="vigil_session_timeout_grace_period",
+        help="Grace period in seconds after session timeout before forceful termination"
+    )
 
 def pytest_configure(config):
     """Configure the plugin."""
@@ -79,7 +120,15 @@ def pytest_configure(config):
 def pytest_sessionfinish(session, exitstatus):
     """
     On xdist worker, sync results to controller.
+    Stop session monitor if active.
     """
+    global _session_monitor
+    
+    # Stop session monitor
+    if _session_monitor is not None:
+        _session_monitor.stop()
+        _session_monitor = None
+    
     if hasattr(session.config, "workeroutput"):
         session.config.workeroutput["vigil_results"] = _execution_results
         session.config.workeroutput["vigil_flaky_tests"] = _flaky_tests
