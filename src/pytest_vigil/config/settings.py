@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = Field(default="pytest-vigil", description="Application name")
-    app_version: str = Field(default="0.4.0", description="Application version")
+    app_version: str = Field(default="0.5.0", description="Application version")
 
     # Default global limits (if not specified via CLI or Marker)
     timeout: Optional[float] = Field(
@@ -74,6 +74,12 @@ class Settings(BaseSettings):
     session_timeout_grace_period: float = Field(
         default=5.0,
         description="Grace period in seconds after session timeout before forcefully killing the test run."
+    )
+    
+    # Report verbosity
+    report_verbosity: Literal["none", "short", "full"] = Field(
+        default="short",
+        description="Control terminal report display: 'none' (no report), 'short' (summary stats), 'full' (all tests)."
     )
 
 

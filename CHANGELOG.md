@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.5.0] - 2026-02-06
+
+### Added
+- CLI report verbosity control via `--vigil-cli-report-verbosity` option with three levels:
+  - `none`: No reliability report displayed (useful for CI pipelines)
+  - `short`: Summary statistics only (default) - shows total tests, averages, fastest/slowest tests, resource stats
+  - `full`: Detailed table with all tests and their individual metrics
+- Environment variable support for report verbosity: `PYTEST_VIGIL__REPORT_VERBOSITY`
+- Comprehensive test suite for CLI report functionality (test_cli_report.py)
+- Summary statistics in short report mode: average duration, fastest/slowest tests, peak CPU/memory usage
+
+### Changed
+- Default terminal report now shows summary statistics instead of full detailed table for better readability
+- Documentation updated with CLI report verbosity usage examples and configuration options
+
 ## [0.4.0] - 2026-02-06
 
 ### Changed
@@ -81,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.1.0...v0.2.0

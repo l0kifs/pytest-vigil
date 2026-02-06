@@ -737,7 +737,7 @@ class TestRetryNonInterference:
                 assert False, "No retry"
         """)
         
-        result = pytester.runpytest()
+        result = pytester.runpytest("--vigil-cli-report-verbosity=full")
         
         # One test should pass (with retry), one should fail (no retry)
         assert result.ret == 1

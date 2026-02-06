@@ -112,6 +112,13 @@ def pytest_addoption(parser):
         dest="vigil_session_timeout_grace_period",
         help="Grace period in seconds after session timeout before forceful termination"
     )
+    group.addoption(
+        "--vigil-cli-report-verbosity",
+        action="store",
+        dest="vigil_cli_report_verbosity",
+        choices=["none", "short", "full"],
+        help="Control terminal report display: none (no report), short (summary stats), full (all tests)"
+    )
 
 def pytest_configure(config):
     """Configure the plugin."""
@@ -327,6 +334,17 @@ def pytest_runtest_protocol(item, nextitem):
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """Report detailed reliability metrics."""
+    settings = get_settings()
+    
+    # Get verbosity from CLI or settings
+    verbosity = config.getoption("vigil_cli_report_verbosity")
+    if verbosity is None:
+        verbosity = settings.report_verbosity
+    
+    # If verbosity is 'none', skip reporting entirely
+    if verbosity == "none":
+        return
+    
     terminalreporter.section("Vigil Reliability Report")
     
     if _flaky_tests:
@@ -339,27 +357,52 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.write_line("No reliability data collected.")
         return
 
-    # simple table
-    headers = ["Test ID", "Att", "Duration (s)", "Max CPU (%)", "Max Mem (MB)"]
-    
-    # Find longest ID
-    max_len = max((len(r["node_id"]) for r in _execution_results), default=20)
-    # Ensure min length
-    max_len = max(max_len, 20)
-    
-    fmt = f"{{:<{max_len}}} {{:>3}} {{:>12}} {{:>12}} {{:>12}}"
-    
-    terminalreporter.write_line(fmt.format(*headers))
-    terminalreporter.write_line("-" * (max_len + 50))
-    
-    for res in _execution_results:
-        terminalreporter.write_line(fmt.format(
-            res["node_id"],
-            res["attempt"],
-            f"{res['duration']:.2f}",
-            f"{res['max_cpu']:.1f}",
-            f"{res['max_memory']:.1f}"
-        ))
+    # Short verbosity: show summary statistics only
+    if verbosity == "short":
+        total_count = len(_execution_results)
+        durations = [r["duration"] for r in _execution_results]
+        cpu_values = [r["max_cpu"] for r in _execution_results]
+        memory_values = [r["max_memory"] for r in _execution_results]
+        
+        avg_duration = sum(durations) / total_count
+        slowest = max(_execution_results, key=lambda r: r["duration"])
+        fastest = min(_execution_results, key=lambda r: r["duration"])
+        avg_cpu = sum(cpu_values) / total_count
+        avg_memory = sum(memory_values) / total_count
+        peak_cpu = max(cpu_values)
+        peak_memory = max(memory_values)
+        
+        terminalreporter.write_line(f"Total Tests: {total_count}")
+        terminalreporter.write_line(f"Average Duration: {avg_duration:.2f}s")
+        terminalreporter.write_line(f"Fastest Test: {fastest['duration']:.2f}s ({fastest['node_id'].split('::')[-1]})")
+        terminalreporter.write_line(f"Slowest Test: {slowest['duration']:.2f}s ({slowest['node_id'].split('::')[-1]})")
+        terminalreporter.write_line(f"Average CPU: {avg_cpu:.1f}%")
+        terminalreporter.write_line(f"Peak CPU: {peak_cpu:.1f}%")
+        terminalreporter.write_line(f"Average Memory: {avg_memory:.1f} MB")
+        terminalreporter.write_line(f"Peak Memory: {peak_memory:.1f} MB")
+        terminalreporter.write_line(f"\n(Use --vigil-cli-report-verbosity=full to see all tests)")
+    else:  # verbosity == "full"
+        # Show detailed table
+        headers = ["Test ID", "Att", "Duration (s)", "Max CPU (%)", "Max Mem (MB)"]
+        
+        # Find longest ID
+        max_len = max((len(r["node_id"]) for r in _execution_results), default=20)
+        # Ensure min length
+        max_len = max(max_len, 20)
+        
+        fmt = f"{{:<{max_len}}} {{:>3}} {{:>12}} {{:>12}} {{:>12}}"
+        
+        terminalreporter.write_line(fmt.format(*headers))
+        terminalreporter.write_line("-" * (max_len + 50))
+        
+        for res in _execution_results:
+            terminalreporter.write_line(fmt.format(
+                res["node_id"],
+                res["attempt"],
+                f"{res['duration']:.2f}",
+                f"{res['max_cpu']:.1f}",
+                f"{res['max_memory']:.1f}"
+            ))
 
     # JSON Report
     report_path = config.getoption("vigil_report")

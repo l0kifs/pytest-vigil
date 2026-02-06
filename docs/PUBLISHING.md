@@ -17,6 +17,11 @@ This project uses [UV](https://docs.astral.sh/uv/) as the package manager and Gi
 
 The project is configured to automatically publish to PyPI when a new GitHub release is created:
 
+**Check current release version** before starting:
+```bash
+gh release list --limit 10 2>&1 | cat
+```
+
 1. **Update version** in `pyproject.toml`:
    ```toml
    version = "0.2.0"  # Update to your new version
@@ -42,7 +47,7 @@ The project is configured to automatically publish to PyPI when a new GitHub rel
    Using GitHub CLI with release notes file (recommended):
    ```bash
    # Create a release notes file
-   cat > .release-notes-v0.2.0.md << 'EOF'
+   cat > release-notes-v0.2.0.md << 'EOF'
    ## 🎯 New Features
    - Feature 1 description
    - Feature 2 description
@@ -60,10 +65,10 @@ The project is configured to automatically publish to PyPI when a new GitHub rel
    # Create the release
    gh release create v0.2.0 \
      --title "v0.2.0 - Release Title" \
-     --notes-file .release-notes-v0.2.0.md
+     --notes-file release-notes-v0.2.0.md
    
    # Clean up
-   rm .release-notes-v0.2.0.md
+   rm release-notes-v0.2.0.md
    ```
    
    Or using inline notes:

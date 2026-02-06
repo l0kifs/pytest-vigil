@@ -48,10 +48,34 @@ pip install pytest-vigil
 | `--vigil-session-timeout` | `s` | No | `None` | Global timeout for entire test run |
 | `--vigil-session-timeout-grace-period` | `s` | No | `5.0` | Grace period before forceful termination |
 | `--vigil-report` | - | No | `None` | Path to JSON report file |
+| `--vigil-cli-report-verbosity` | - | No | `short` | Terminal report display: `none`, `short` (summary), `full` |
 
 ```bash
 pytest --vigil-timeout 5 --vigil-memory 512 --vigil-cpu 80
 ```
+
+### Terminal Report Verbosity
+
+Control how much of the reliability report is displayed in the terminal. Available options:
+
+- **`none`**: No reliability report displayed (useful for CI pipelines where you only need JSON reports)
+- **`short`**: Display summary statistics only (total tests, averages, fastest/slowest tests)
+- **`full`**: Display detailed table with all tests (default behavior)
+
+```bash
+# Hide terminal report completely
+pytest --vigil-cli-report-verbosity none
+
+# Show summary statistics only (default)
+pytest --vigil-cli-report-verbosity short
+
+# Show all tests in detailed table
+pytest --vigil-cli-report-verbosity full
+```
+
+**Configuration**:
+- CLI: `--vigil-cli-report-verbosity short`
+- Environment: `PYTEST_VIGIL__REPORT_VERBOSITY=short`
 
 ### Global Session Timeout
 
@@ -104,3 +128,4 @@ Configure via environment variables (prefix `PYTEST_VIGIL__`):
 - `PYTEST_VIGIL__STALL_TIMEOUT=10.0`
 - `PYTEST_VIGIL__SESSION_TIMEOUT=900.0`
 - `PYTEST_VIGIL__SESSION_TIMEOUT_GRACE_PERIOD=5.0`
+- `PYTEST_VIGIL__REPORT_VERBOSITY=short`  # Options: none, short, full
