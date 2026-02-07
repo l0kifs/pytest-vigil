@@ -300,12 +300,26 @@ def pytest_runtest_protocol(item, nextitem):
             if execution.measurements:
                 max_cpu = max(m.cpu_percent for m in execution.measurements)
                 max_mem = max(m.memory_mb for m in execution.measurements)
+                
+                # Aggregate CPU breakdown: collect peak CPU for each process type
+                cpu_breakdown_aggregate = {}
+                for m in execution.measurements:
+                    for process_type, cpu_value in m.cpu_breakdown.items():
+                        if process_type not in cpu_breakdown_aggregate:
+                            cpu_breakdown_aggregate[process_type] = cpu_value
+                        else:
+                            cpu_breakdown_aggregate[process_type] = max(
+                                cpu_breakdown_aggregate[process_type],
+                                cpu_value
+                            )
+                
                 _execution_results.append({
                     "node_id": item.nodeid,
                     "attempt": attempt,
                     "duration": execution.duration,
                     "max_cpu": max_cpu,
                     "max_memory": max_mem,
+                    "cpu_breakdown": cpu_breakdown_aggregate,
                     "limits": [limit.model_dump(mode='json') for limit in limits]
                 })
 
@@ -384,6 +398,24 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.write_line(f"Peak CPU: {peak_cpu:.1f}%")
         terminalreporter.write_line(f"Average Memory: {avg_memory:.1f} MB")
         terminalreporter.write_line(f"Peak Memory: {peak_memory:.1f} MB")
+        
+        # Aggregate CPU breakdown across all tests
+        total_breakdown = {}
+        for r in _execution_results:
+            breakdown = r.get("cpu_breakdown", {})
+            for process_type, cpu_value in breakdown.items():
+                if process_type not in total_breakdown:
+                    total_breakdown[process_type] = cpu_value
+                else:
+                    total_breakdown[process_type] = max(total_breakdown[process_type], cpu_value)
+        
+        if total_breakdown:
+            terminalreporter.write_line("\nPeak CPU by Process Type:")
+            # Sort by CPU value descending
+            sorted_breakdown = sorted(total_breakdown.items(), key=lambda x: x[1], reverse=True)
+            for process_type, cpu_value in sorted_breakdown:
+                terminalreporter.write_line(f"  {process_type.capitalize()}: {cpu_value:.1f}%")
+        
         terminalreporter.write_line(f"\n(Use --vigil-cli-report-verbosity=full to see all tests)")
     else:  # verbosity == "full"
         # Show detailed table

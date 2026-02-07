@@ -47,10 +47,19 @@ class VigilMonitor:
         # Initialize CPU counter (first call often irrelevant)
         self._monitor.get_stats()
         
+        iteration = 0
         while not self._stop_event.is_set():
             try:
-                cpu, mem = self._monitor.get_stats()
-                self.execution.add_measurement(cpu, mem)
+                # Collect detailed stats every 10 iterations to reduce overhead
+# For other iterations, use simple stats
+                if iteration % 10 == 0:
+                    cpu, mem, cpu_breakdown = self._monitor.get_detailed_stats()
+                    self.execution.add_measurement(cpu, mem, cpu_breakdown)
+                else:
+                    cpu, mem = self._monitor.get_stats()
+                    self.execution.add_measurement(cpu, mem, {})
+                
+                iteration += 1
                 
                 violation = self.policy_service.check_violation(self.execution, self.limits)
                 if violation:

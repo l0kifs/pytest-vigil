@@ -19,7 +19,8 @@
 - **Global Session Timeout**: Set a maximum duration for the entire test run, with graceful and forceful termination.
 - **CI Awareness**: Automatically scales limits (default `2x`) when running in CI environments.
 - **Flake Management**: Built-in retry mechanism for failed or resource-violating tests.
-- **Detailed Reporting**: Generates JSON reports with resource usage metrics.
+- **Detailed Reporting**: Generates JSON reports with resource usage metrics and CPU breakdown by process type.
+- **CPU Process Breakdown**: Track CPU usage by process type (pytest, browser, renderer, GPU, webdriver, python subprocesses).
 - **Debug context**: Dumps thread stacks upon timeout/interrupt.
 
 ## Installation
@@ -56,8 +57,35 @@ pytest --vigil-timeout 5 --vigil-memory 512 --vigil-cpu 80
 Control how much of the reliability report is displayed in the terminal. Available options:
 
 - **`none`**: No reliability report displayed (useful for CI pipelines where you only need JSON reports)
-- **`short`**: Display summary statistics only (total tests, averages, fastest/slowest tests)
-- **`full`**: Display detailed table with all tests (default behavior)
+- **`short`**: Display summary statistics only (total tests, averages, fastest/slowest tests, CPU breakdown by process type)
+- **`full`**: Display detailed table with all tests
+
+**Short mode example:**
+```
+Vigil Reliability Report
+Total Tests: 953
+Average Duration: 5.32s
+Fastest Test: 0.10s (test_convert_math_sell[GBP-PYUSD-278.29-1-10-1-False])
+Slowest Test: 332.81s (test_buy_ssn[chromium])
+Average CPU: 106.1%
+Peak CPU: 7183.7%
+Average Memory: 288.6 MB
+Peak Memory: 312.7 MB
+
+Peak CPU by Process Type:
+  Browser: 3542.1%
+  Renderer: 2156.8%
+  Gpu: 891.3%
+  Pytest: 593.5%
+```
+
+**How Peak CPU Can Exceed 100%:**
+CPU percentage represents per-process usage across all cores. With multi-process tests (e.g., browser automation with Chromium):
+- Each process can use 100% per CPU core
+- Parent process + child processes are summed
+- 7183.7% = ~72 cores of CPU usage (typical for Chromium: browser + multiple renderers + GPU processes)
+
+The CPU breakdown helps identify which process types consume the most resources, enabling targeted optimization.
 
 ```bash
 # Hide terminal report completely
@@ -115,6 +143,44 @@ import pytest
 def test_critical_path():
     ...
 ```
+
+### JSON Report Format
+
+When using `--vigil-report`, pytest-vigil generates a JSON file with detailed metrics for each test, including CPU breakdown by process type:
+
+```json
+{
+  "timestamp": "2026-02-07T12:00:00.000000+00:00",
+  "flaky_tests": ["test_flaky"],
+  "results": [
+    {
+      "node_id": "test_browser_automation.py::test_checkout",
+      "attempt": 0,
+      "duration": 15.42,
+      "max_cpu": 2543.7,
+      "max_memory": 312.5,
+      "cpu_breakdown": {
+        "pytest": 89.2,
+        "browser": 1205.3,
+        "renderer": 891.8,
+        "gpu": 357.4
+      },
+      "limits": [...]
+    }
+  ]
+}
+```
+
+The `cpu_breakdown` field shows peak CPU usage for each process type:
+- **`pytest`**: Main test process
+- **`browser`**: Browser main process (Chromium, Firefox, Safari)
+- **`renderer`**: Browser renderer processes
+- **`gpu`**: GPU processes
+- **`webdriver`**: WebDriver/Selenium driver processes
+- **`python`**: Python subprocess
+- **`automation`**: Playwright/Puppeteer processes
+- **`network`**: Network/utility processes
+- **`other`**: Other child processes
 
 ### Configuration (Env)
 

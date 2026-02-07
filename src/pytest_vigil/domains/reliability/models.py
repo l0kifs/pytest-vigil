@@ -1,6 +1,6 @@
 """Domain models for test reliability and monitoring."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict
@@ -32,6 +32,7 @@ class ExecutionMeasurement(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     cpu_percent: float
     memory_mb: float
+    cpu_breakdown: Dict[str, float] = Field(default_factory=dict)
 
 class TestExecution(BaseModel):
     """Represents a single test execution context."""
@@ -42,10 +43,11 @@ class TestExecution(BaseModel):
     outcome: Optional[TestOutcome] = None
     retry_attempt: int = 0
 
-    def add_measurement(self, cpu: float, memory: float) -> None:
+    def add_measurement(self, cpu: float, memory: float, cpu_breakdown: Optional[Dict[str, float]] = None) -> None:
         self.measurements.append(ExecutionMeasurement(
             cpu_percent=cpu,
-            memory_mb=memory
+            memory_mb=memory,
+            cpu_breakdown=cpu_breakdown or {}
         ))
 
     @property
