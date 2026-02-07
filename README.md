@@ -25,12 +25,12 @@
 
 ## ✨ Features
 
-- 👮 **Resource Guard**: Enforce hard limits on **Time**, **Memory** (MB), and **CPU** (%).
-- 🧟 **Stall Detective**: Automatically detect and kill deadlocked tests (monitoring low CPU).
-- ⏱️ **Session Enforcer**: Set a global timeout for the entire suite with graceful shutdown.
-- 🤖 **CI Native**: Auto-scales limits (default `2x`) when running in CI environments.
-- 🔄 **Flake Manager**: Built-in retry mechanism for tests that violate resource limits.
-- 🔬 **Forensic Reporting**: JSON reports with deep CPU breakdown (Browser vs Renderer vs GPU).
+- **Resource limits**: Set maximum time, memory (MB), and CPU (%) per test
+- **Deadlock detection**: Kill tests that hang with low CPU activity
+- **Suite timeout**: Stop the entire test run after a specified duration
+- **CI scaling**: Automatically relaxes limits by 2x in CI environments (configurable)
+- **Retry mechanism**: Re-run tests that fail due to resource violations
+- **Detailed reports**: JSON output showing CPU breakdown by process type (browser, renderer, etc.)
 
 ## 🚀 Installation
 
