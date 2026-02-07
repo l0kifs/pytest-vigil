@@ -9,13 +9,17 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/l0kifs/pytest-vigil)
 ![GitHub Release Date](https://img.shields.io/github/release-date/l0kifs/pytest-vigil?label=last%20release)
 
-### 🛡️ The Bodyguard for Your Test Suite
-
 </div>
 
-**Pytest Vigil** is a reliability plugin that acts as a watchdog for your test suite. It prevents resource-hungry tests, deadlocks, and silent stalls from sabotaging your CI pipeline.
+**Pytest Vigil** is a reliability pytest plugin that enforces resource limits on your tests and kills them when they exceed those limits.
 
-Instead of waiting hours for a hung test to timeout, Vigil steps in to enforce limits on time, memory, and CPU—giving you detailed forensic reports on exactly what went wrong.
+### Why you might need this
+
+- Tests sometimes hang indefinitely due to deadlocks or infinite loops
+- Memory leaks crash your test runner or CI environment
+- CPU-intensive tests slow down your entire suite
+- You want to enforce maximum runtime for your CI pipeline
+- You need to identify which tests are resource hogs
 
 ---
 
