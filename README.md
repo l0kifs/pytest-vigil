@@ -101,18 +101,18 @@ Perfect for CI/CD pipelines. All options are available via `PYTEST_VIGIL__*` pre
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PYTEST_VIGIL__TIMEOUT` | `None` | Default test timeout (seconds) |
-| `PYTEST_VIGIL__MEMORY_LIMIT_MB` | `None` | Default memory limit (MB) |
-| `PYTEST_VIGIL__CPU_LIMIT_PERCENT` | `None` | Default CPU limit (%) |
-| `PYTEST_VIGIL__SESSION_TIMEOUT` | `None` | Global suite timeout (seconds) |
-| `PYTEST_VIGIL__SESSION_TIMEOUT_GRACE_PERIOD` | `5.0` | Seconds to wait for graceful shutdown |
-| `PYTEST_VIGIL__MONITOR_INTERVAL` | `0.1` | Internal check frequency (seconds) |
-| `PYTEST_VIGIL__STRICT_MODE` | `True` | Enforce strict monitoring |
-| `PYTEST_VIGIL__CI_MULTIPLIER` | `2.0` | Limit multiplier for CI environments |
-| `PYTEST_VIGIL__RETRY_COUNT` | `0` | Number of retries for failures |
-| `PYTEST_VIGIL__STALL_TIMEOUT` | `None` | Low-CPU deadlock timeout (seconds) |
-| `PYTEST_VIGIL__STALL_CPU_THRESHOLD` | `1.0` | Threshold (%) for stall detection |
-| `PYTEST_VIGIL__REPORT_VERBOSITY` | `short` | Terminal output: `none`, `short`, `full` |
+| `TIMEOUT` | `None` | Default test timeout (seconds) |
+| `MEMORY_LIMIT_MB` | `None` | Default memory limit (MB) |
+| `CPU_LIMIT_PERCENT` | `None` | Default CPU limit (%) |
+| `SESSION_TIMEOUT` | `None` | Global suite timeout (seconds) |
+| `SESSION_TIMEOUT_GRACE_PERIOD` | `5.0` | Seconds to wait for graceful shutdown |
+| `MONITOR_INTERVAL` | `0.1` | Internal check frequency (seconds) |
+| `STRICT_MODE` | `True` | Enforce strict monitoring |
+| `CI_MULTIPLIER` | `2.0` | Limit multiplier for CI environments |
+| `RETRY_COUNT` | `0` | Number of retries for failures |
+| `STALL_TIMEOUT` | `None` | Low-CPU deadlock timeout (seconds) |
+| `STALL_CPU_THRESHOLD` | `1.0` | Threshold (%) for stall detection |
+| `REPORT_VERBOSITY` | `short` | Terminal output: `none`, `short`, `full` |
 
 ## 📊 Reporting
 
