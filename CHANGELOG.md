@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.6.1] - 2026-02-19
+
+### Changed
+- JSON reporting configuration and naming were clarified for consistency:
+  - Renamed settings `report_verbosity` → `console_report_verbosity`
+  - Renamed settings `report_filename` → `json_report_filename`
+  - Renamed settings `vigil_json_report` → `json_report`
+  - Renamed CLI option `--vigil-report` → `--vigil-json-report`
+- Relative JSON report output continues to default under `.pytest_vigil`
+
+### Fixed
+- Updated tests and documentation to match the new reporting names and options
+
 ## [0.6.0] - 2026-02-19
 
 ### Changed
@@ -123,7 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...v0.5.0
