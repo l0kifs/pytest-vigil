@@ -1,3 +1,6 @@
-from .settings import Settings, get_settings
+"""
+Project configuration package.
 
-__all__ = ["Settings", "get_settings"]
+Contains application settings, constants, and logging configuration.
+No technical implementation details, business logic, or imports from other layers.
+"""

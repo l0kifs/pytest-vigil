@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.6.0] - 2026-02-19
+
+### Changed
+- Refactored internal architecture to comply with Domain-Driven Design (DDD) principles
+- Moved pytest plugin entry point from `pytest_vigil.plugin` to `pytest_vigil.entry_points.plugin`
+- Extracted CLI terminal reporting into `infrastructure/reporting/cli_reporter.py` (`CliReporter`)
+- Extracted JSON report writing into `infrastructure/reporting/json_reporter.py` (`JsonReporter`)
+- All `__init__.py` files now contain only docstrings (no imports or code)
+
+### Added
+- `ExecutionResult` domain model in `domains/reliability/models.py` for typed, immutable per-test execution records
+- `infrastructure/reporting/` sub-package for reporting infrastructure
+
+### Fixed
+- CLI short report labels no longer contain extra padding spaces (e.g. `Total Tests: 6` instead of `Total Tests:      6`)
+
 ## [0.5.1] - 2026-02-07
 
 ### Fixed
@@ -106,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.3.0...v0.4.0

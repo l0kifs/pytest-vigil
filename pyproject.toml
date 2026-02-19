@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "pytest-vigil"
-version = "0.5.1"
+version = "0.6.0"
 description = "A pytest plugin for enhanced test reliability and monitoring"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -55,7 +55,7 @@ dev = [
 ]
 
 [project.entry-points.pytest11]
-pytest-vigil = "pytest_vigil.plugin"
+pytest-vigil = "pytest_vigil.entry_points.plugin"
 
 [tool.uv]
 package = true

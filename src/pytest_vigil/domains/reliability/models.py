@@ -53,3 +53,16 @@ class TestExecution(BaseModel):
     @property
     def duration(self) -> float:
         return (datetime.now() - self.start_time).total_seconds()
+
+
+class ExecutionResult(BaseModel):
+    """Immutable record of a completed test execution with measured resource usage."""
+
+    node_id: str
+    attempt: int
+    duration: float
+    max_cpu: float
+    max_memory: float
+    cpu_breakdown: Dict[str, float] = Field(default_factory=dict)
+    limits: List[ResourceLimit] = Field(default_factory=list)
+    model_config = ConfigDict(frozen=True)

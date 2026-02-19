@@ -1,7 +1,6 @@
 """Domain services for reliability logic."""
 
 from typing import List, Optional
-from loguru import logger
 from pytest_vigil.domains.reliability.models import TestExecution, ResourceLimit, InteractionType
 
 class PolicyService:
