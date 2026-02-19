@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extracted CLI terminal reporting into `infrastructure/reporting/cli_reporter.py` (`CliReporter`)
 - Extracted JSON report writing into `infrastructure/reporting/json_reporter.py` (`JsonReporter`)
 - All `__init__.py` files now contain only docstrings (no imports or code)
+- Development status updated to **Production/Stable**
 
 ### Added
 - `ExecutionResult` domain model in `domains/reliability/models.py` for typed, immutable per-test execution records
