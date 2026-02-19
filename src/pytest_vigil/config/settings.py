@@ -76,10 +76,22 @@ class Settings(BaseSettings):
         description="Grace period in seconds after session timeout before forcefully killing the test run."
     )
     
-    # Report verbosity
-    report_verbosity: Literal["none", "short", "full"] = Field(
+    # Reporting
+    console_report_verbosity: Literal["none", "short", "full"] = Field(
         default="short",
         description="Control terminal report display: 'none' (no report), 'short' (summary stats), 'full' (all tests)."
+    )
+    json_report_filename: str = Field(
+        default="vigil_report.json",
+        description="Default JSON report filename when report saving is enabled."
+    )
+    json_report: bool = Field(
+        default=False,
+        description="Enable JSON report saving by default."
+    )
+    artifacts_dir: str = Field(
+        default=".pytest_vigil",
+        description="Default directory where plugin-generated artifacts are stored."
     )
 
 

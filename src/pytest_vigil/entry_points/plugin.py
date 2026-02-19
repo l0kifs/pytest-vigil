@@ -1,6 +1,7 @@
 """Pytest plugin entry point for pytest-vigil."""
 
 import os
+from pathlib import Path
 import pytest
 from _pytest.runner import runtestprotocol
 from loguru import logger
@@ -73,7 +74,16 @@ def pytest_addoption(parser) -> None:
     group.addoption("--vigil-retry",          action="store", dest="vigil_retry",          help="Number of retries for failed/violation tests")
     group.addoption("--vigil-stall-timeout",  action="store", dest="vigil_stall_timeout",  help="Max duration in seconds of low CPU for stall detection")
     group.addoption("--vigil-stall-cpu-threshold", action="store", dest="vigil_stall_cpu_threshold", help="CPU threshold in % for stall detection")
-    group.addoption("--vigil-report",         action="store", dest="vigil_report",         help="Path to generate JSON report")
+    group.addoption(
+        "--vigil-json-report",
+        action="store",
+        nargs="?",
+        const=True,
+        default=None,
+        dest="vigil_json_report",
+        help="Enable JSON report generation (optionally accepts a custom path)",
+    )
+    group.addoption("--vigil-output-dir",     action="store", dest="vigil_output_dir",     help="Directory for generated Vigil artifacts")
     group.addoption("--vigil-session-timeout", action="store", dest="vigil_session_timeout", help="Global timeout in seconds for the entire test session")
     group.addoption("--vigil-session-timeout-grace-period", action="store", dest="vigil_session_timeout_grace_period", help="Grace period in seconds after session timeout before forceful termination")
     group.addoption("--vigil-cli-report-verbosity", action="store", dest="vigil_cli_report_verbosity", choices=["none", "short", "full"], help="Control terminal report display")
@@ -272,7 +282,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
     settings = get_settings()
     verbosity = config.getoption("vigil_cli_report_verbosity")
     if verbosity is None:
-        verbosity = settings.report_verbosity
+        verbosity = settings.console_report_verbosity
 
     CliReporter().report(
         terminalreporter=terminalreporter,
@@ -281,14 +291,21 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:
         verbosity=verbosity,
     )
 
-    report_path = config.getoption("vigil_report")
-    if report_path:
+    report_option = config.getoption("vigil_json_report")
+    if report_option is None:
+        report_option = settings.json_report
+    if report_option:
+        output_dir = config.getoption("vigil_output_dir")
+        if output_dir is None:
+            output_dir = settings.artifacts_dir
+        report_target = report_option if isinstance(report_option, str) else settings.json_report_filename
+        resolved_report_path = _resolve_artifact_path(report_target, output_dir)
         JsonReporter().save(
-            path=report_path,
+            path=resolved_report_path,
             results=_execution_results,
             flaky_tests=_flaky_tests,
         )
-        terminalreporter.write_line(f"\nSaved Vigil report to {report_path}")
+        terminalreporter.write_line(f"\nSaved Vigil report to {resolved_report_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -299,3 +316,11 @@ def _ci_multiplier(settings) -> float:
     """Return the CI timeout multiplier when running in a CI environment."""
     is_ci = os.getenv("CI", "false").lower() == "true" or bool(os.getenv("GITHUB_ACTIONS"))
     return settings.ci_multiplier if is_ci else 1.0
+
+
+def _resolve_artifact_path(path: str, output_dir: str) -> str:
+    """Resolve generated artifact path to an absolute or output-dir-relative target."""
+    candidate = Path(path)
+    if candidate.is_absolute():
+        return str(candidate)
+    return str(Path(output_dir) / candidate)

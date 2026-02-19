@@ -24,12 +24,12 @@ class TestFeatureNonInterference:
         report_file = "vigil_report.json"
         result = pytester.runpytest(
             "--vigil-session-timeout=10",
-            f"--vigil-report={report_file}"
+            f"--vigil-json-report={report_file}"
         )
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -47,13 +47,13 @@ class TestFeatureNonInterference:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         # Should still fail
         assert result.ret == 1
         
         # But report should be generated
-        assert (pytester.path / report_file).exists()
+        assert (pytester.path / ".pytest_vigil" / report_file).exists()
     
     def test_report_with_verbose_output(self, pytester):
         """Verify report works with verbose pytest output."""
@@ -67,7 +67,7 @@ class TestFeatureNonInterference:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest("-vv", f"--vigil-report={report_file}")
+        result = pytester.runpytest("-vv", f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
-        assert (pytester.path / report_file).exists()
+        assert (pytester.path / ".pytest_vigil" / report_file).exists()

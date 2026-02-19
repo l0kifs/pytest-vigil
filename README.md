@@ -56,7 +56,8 @@ pytest --vigil-session-timeout 900
 
 **3. Generate Reliability Report**
 ```bash
-pytest --vigil-report reliability.json
+pytest --vigil-json-report
+# saved to .pytest_vigil/vigil_report.json
 ```
 
 ## 🛠 Usage & Configuration
@@ -71,7 +72,8 @@ pytest --vigil-report reliability.json
 | `--vigil-retry` | `0` | Auto-retry failed/limit-violating tests |
 | `--vigil-stall-timeout` | `None` | Max duration of low CPU (deadlock detection) |
 | `--vigil-session-timeout` | `None` | Global timeout for entire test run |
-| `--vigil-report` | `None` | Path to save JSON reliability report |
+| `--vigil-json-report` | `False` | Enable JSON reliability report saving |
+| `--vigil-output-dir` | `.pytest_vigil` | Base directory for generated Vigil artifacts |
 | `--vigil-cli-report-verbosity` | `short` | Terminal output: `none`, `short`, `full` |
 
 ### Using Markers
@@ -112,7 +114,10 @@ Perfect for CI/CD pipelines. All options are available via `PYTEST_VIGIL__*` pre
 | `RETRY_COUNT` | `0` | Number of retries for failures |
 | `STALL_TIMEOUT` | `None` | Low-CPU deadlock timeout (seconds) |
 | `STALL_CPU_THRESHOLD` | `1.0` | Threshold (%) for stall detection |
-| `REPORT_VERBOSITY` | `short` | Terminal output: `none`, `short`, `full` |
+| `CONSOLE_REPORT_VERBOSITY` | `short` | Terminal output: `none`, `short`, `full` |
+| `JSON_REPORT_FILENAME` | `vigil_report.json` | Default JSON report filename when reporting is enabled |
+| `JSON_REPORT` | `False` | Enable JSON report saving by default |
+| `ARTIFACTS_DIR` | `.pytest_vigil` | Base directory for generated Vigil artifacts |
 
 ## 📊 Reporting
 
@@ -148,6 +153,8 @@ tests/test_api.py::test_latency                           0         0.25        
 
 ### JSON Report
 The JSON report captures `cpu_breakdown` for every test, helping you identify if it's the **Browser**, **DB**, or **Python** code causing the spike.
+
+Report saving is disabled by default. Enable it with `--vigil-json-report`; output goes to `.pytest_vigil/vigil_report.json` unless overridden.
 
 **Key Fields:**
 - `flaky_tests`: Tests that passed after retry (attempt > 0)

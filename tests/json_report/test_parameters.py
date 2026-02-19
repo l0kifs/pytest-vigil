@@ -22,11 +22,11 @@ class TestParameters:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -46,11 +46,11 @@ class TestParameters:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -70,11 +70,11 @@ class TestParameters:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -94,11 +94,11 @@ class TestParameters:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -123,13 +123,13 @@ class TestParameters:
             "--vigil-timeout=1.5",
             "--vigil-memory=50",
             "--vigil-cpu=60",
-            f"--vigil-report={report_file}"
+            f"--vigil-json-report={report_file}"
         )
         
         # CLI params create limits even without marker
         # But the test will fail due to low CPU limit (50MB)
         # So we expect failure, but report should still be generated
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         assert report_path.exists()
         
         with open(report_path) as f:

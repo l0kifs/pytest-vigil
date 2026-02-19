@@ -95,7 +95,7 @@ class TestSessionTimeoutEdgeCases:
         
         result = pytester.runpytest(
             "--vigil-session-timeout=10",  # Long timeout to avoid killing parent
-            f"--vigil-report={report_file}",
+            f"--vigil-json-report={report_file}",
             "-v"
         )
         

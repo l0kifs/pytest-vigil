@@ -34,11 +34,11 @@ class TestXDistIntegration:
         """)
         
         report_file = "vigil_xdist.json"
-        result = pytester.runpytest("-n", "2", f"--vigil-report={report_file}")
+        result = pytester.runpytest("-n", "2", f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         assert report_path.exists(), "Report file was not created"
         
         with open(report_path) as f:
@@ -74,11 +74,11 @@ class TestXDistIntegration:
         """)
         
         report_file = "vigil_xdist.json"
-        result = pytester.runpytest("-n", "2", f"--vigil-report={report_file}")
+        result = pytester.runpytest("-n", "2", f"--vigil-json-report={report_file}")
         
         assert result.ret == 1  # One failure
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 3
@@ -101,11 +101,11 @@ class TestXDistIntegration:
         """)
         
         report_file = "vigil_xdist.json"
-        result = pytester.runpytest("-n", "2", f"--vigil-report={report_file}")
+        result = pytester.runpytest("-n", "2", f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Should have flaky test recorded

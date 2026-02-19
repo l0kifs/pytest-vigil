@@ -23,11 +23,11 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -46,11 +46,11 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 1
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -69,12 +69,12 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         # Skipped test shouldn't fail the run
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Skipped tests likely won't appear as vigil doesn't monitor them
@@ -95,12 +95,12 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         # xfail doesn't cause failure
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Test may or may not appear depending on vigil's execution
@@ -120,9 +120,9 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert "results" in data
@@ -150,11 +150,11 @@ class TestTestOutcomes:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 1  # One failure
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 3

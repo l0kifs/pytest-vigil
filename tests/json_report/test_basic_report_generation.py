@@ -21,10 +21,10 @@ class TestBasicReportGeneration:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest("--vigil-json-report")
         
         assert result.ret == 0
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         assert report_path.exists()
         
         with open(report_path) as f:
@@ -50,6 +50,22 @@ class TestBasicReportGeneration:
         assert "max_cpu" in result_entry
         assert "max_memory" in result_entry
         assert "limits" in result_entry
+
+    def test_report_flag_enabled_without_path(self, pytester):
+        """Verify boolean --vigil-json-report saves to default filename."""
+        pytester.makepyfile("""
+            import pytest
+            import time
+
+            @pytest.mark.vigil(timeout=2.0)
+            def test_sample():
+                time.sleep(0.1)
+        """)
+
+        result = pytester.runpytest("--vigil-json-report")
+
+        assert result.ret == 0
+        assert (pytester.path / ".pytest_vigil" / "vigil_report.json").exists()
     
     def test_report_with_relative_path(self, pytester):
         """Verify report can be created with relative path."""
@@ -64,10 +80,10 @@ class TestBasicReportGeneration:
         
         report_file = "reports/vigil.json"
         pytester.path.joinpath("reports").mkdir(exist_ok=True)
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         assert report_path.exists()
     
     def test_report_with_absolute_path(self, pytester, tmp_path):
@@ -82,7 +98,7 @@ class TestBasicReportGeneration:
         """)
         
         report_file = tmp_path / "vigil_absolute.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         assert report_file.exists()
@@ -99,12 +115,13 @@ class TestBasicReportGeneration:
         """)
         
         report_file = "vigil_report.json"
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
+        report_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Create existing file
         report_path.write_text('{"old": "data"}')
         
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         with open(report_path) as f:
@@ -114,7 +131,7 @@ class TestBasicReportGeneration:
         assert "results" in data
     
     def test_no_report_without_option(self, pytester):
-        """Verify no report is generated without --vigil-report option."""
+        """Verify no report is generated without --vigil-json-report option."""
         pytester.makepyfile("""
             import pytest
             import time
@@ -129,3 +146,4 @@ class TestBasicReportGeneration:
         assert result.ret == 0
         # Check no vigil_report.json created
         assert not (pytester.path / "vigil_report.json").exists()
+        assert not (pytester.path / ".pytest_vigil" / "vigil_report.json").exists()

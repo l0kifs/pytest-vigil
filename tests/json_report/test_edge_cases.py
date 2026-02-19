@@ -18,10 +18,10 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         # No tests collected = no report generated (expected behavior)
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         if report_path.exists():
             # If report exists, it should be empty
             with open(report_path) as f:
@@ -41,11 +41,11 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         # Tests without vigil marker won't generate report
         if report_path.exists():
             with open(report_path) as f:
@@ -72,11 +72,11 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Should have at least the vigil-marked tests
@@ -104,11 +104,11 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 3
@@ -134,11 +134,11 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 2
@@ -158,11 +158,11 @@ class TestEdgeCases:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Should handle tests with minimal measurements

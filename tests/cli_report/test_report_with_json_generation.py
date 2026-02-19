@@ -42,7 +42,7 @@ class TestReportWithJsonGeneration:
         
         report_file = "vigil_report.json"
         result = pytester.runpytest(
-            f"--vigil-report={report_file}",
+            f"--vigil-json-report={report_file}",
             "--vigil-cli-report-verbosity=short"
         )
         output = result.stdout.str()
@@ -54,7 +54,7 @@ class TestReportWithJsonGeneration:
         assert "Average Duration:" in output
         
         # JSON report should have all 6 tests
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         with open(report_path) as f:
             data = json.load(f)
         
@@ -73,7 +73,7 @@ class TestReportWithJsonGeneration:
         
         report_file = "vigil_report.json"
         result = pytester.runpytest(
-            f"--vigil-report={report_file}",
+            f"--vigil-json-report={report_file}",
             "--vigil-cli-report-verbosity=none"
         )
         output = result.stdout.str()

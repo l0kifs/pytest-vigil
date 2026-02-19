@@ -9,7 +9,7 @@ class TestReportConfiguration:
     """Test CLI report configuration via environment and CLI."""
     
     def test_env_variable_sets_verbosity(self, pytester, monkeypatch):
-        """Verify PYTEST_VIGIL__REPORT_VERBOSITY environment variable works."""
+        """Verify PYTEST_VIGIL__CONSOLE_REPORT_VERBOSITY environment variable works."""
         pytester.makepyfile("""
             import pytest
             import time
@@ -20,7 +20,7 @@ class TestReportConfiguration:
         """)
         
         # Set environment variable
-        monkeypatch.setenv("PYTEST_VIGIL__REPORT_VERBOSITY", "none")
+        monkeypatch.setenv("PYTEST_VIGIL__CONSOLE_REPORT_VERBOSITY", "none")
         
         result = pytester.runpytest()
         output = result.stdout.str()
@@ -41,7 +41,7 @@ class TestReportConfiguration:
         """)
         
         # Set env to none
-        monkeypatch.setenv("PYTEST_VIGIL__REPORT_VERBOSITY", "none")
+        monkeypatch.setenv("PYTEST_VIGIL__CONSOLE_REPORT_VERBOSITY", "none")
         
         # Override with CLI
         result = pytester.runpytest("--vigil-cli-report-verbosity=full")

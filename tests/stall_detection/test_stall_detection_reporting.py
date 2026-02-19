@@ -26,11 +26,11 @@ class TestStallDetectionReporting:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -54,11 +54,11 @@ class TestStallDetectionReporting:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 1
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Verify stall limit is recorded
@@ -82,11 +82,11 @@ class TestStallDetectionReporting:
         """)
         
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -107,12 +107,12 @@ class TestStallDetectionReporting:
         result = pytester.runpytest(
             "--vigil-stall-timeout=2.0",
             "--vigil-stall-cpu-threshold=5.0",
-            f"--vigil-report={report_file}"
+            f"--vigil-json-report={report_file}"
         )
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]

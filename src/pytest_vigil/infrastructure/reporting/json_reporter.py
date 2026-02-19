@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List
 from loguru import logger
 from pytest_vigil.domains.reliability.models import ExecutionResult
@@ -35,7 +36,9 @@ class JsonReporter:
             ],
         }
         try:
-            with open(path, "w") as f:
+            report_path = Path(path)
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            with report_path.open("w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             logger.info(f"Vigil JSON report saved to {path}")
         except OSError as exc:

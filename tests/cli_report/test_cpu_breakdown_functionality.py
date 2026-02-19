@@ -110,14 +110,14 @@ class TestCPUBreakdownFunctionality:
         
         report_file = "vigil_cpu_breakdown.json"
         result = pytester.runpytest(
-            f"--vigil-report={report_file}",
+            f"--vigil-json-report={report_file}",
             "--vigil-cli-report-verbosity=short"
         )
         
         assert result.ret == 0
         
         # Check JSON report contains cpu_breakdown
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         with open(report_path) as f:
             data = json.load(f)
         
@@ -241,14 +241,14 @@ class TestCPUBreakdownFunctionality:
         report_file = "vigil_xdist_breakdown.json"
         result = pytester.runpytest(
             "-n", "2",
-            f"--vigil-report={report_file}",
+            f"--vigil-json-report={report_file}",
             "--vigil-cli-report-verbosity=short"
         )
         
         assert result.ret == 0
         
         # Check JSON report
-        report_path = pytester.path / report_file
+        report_path = pytester.path / ".pytest_vigil" / report_file
         with open(report_path) as f:
             data = json.load(f)
         

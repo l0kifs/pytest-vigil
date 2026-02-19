@@ -27,11 +27,11 @@ class TestCIEnvironment:
         # Run with CI=true
         with pytest.MonkeyPatch.context() as m:
             m.setenv("CI", "true")
-            result = pytester.runpytest(f"--vigil-report={report_file}")
+            result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]
@@ -56,11 +56,11 @@ class TestCIEnvironment:
         # Run without CI
         with pytest.MonkeyPatch.context() as m:
             m.setenv("CI", "false")
-            result = pytester.runpytest(f"--vigil-report={report_file}")
+            result = pytester.runpytest(f"--vigil-json-report={report_file}")
         
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         limits = data["results"][0]["limits"]

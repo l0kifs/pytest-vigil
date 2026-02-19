@@ -22,10 +22,10 @@ class TestResourceLimitsReports:
                 assert True
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -47,10 +47,10 @@ class TestResourceLimitsReports:
                 assert True
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -70,10 +70,10 @@ class TestResourceLimitsReports:
                 assert result > 0
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -94,10 +94,10 @@ class TestResourceLimitsReports:
                 assert result > 0
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -118,10 +118,10 @@ class TestResourceLimitsReports:
                 time.sleep(2)
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}")
         assert result.ret == 1
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -138,10 +138,10 @@ class TestResourceLimitsReports:
                 assert True
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}", "--vigil-timeout=2.0")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}", "--vigil-timeout=2.0")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         assert len(data["results"]) == 1
@@ -167,10 +167,10 @@ class TestResourceLimitsReports:
                 time.sleep(0.1)
         """)
         report_file = "vigil_report.json"
-        result = pytester.runpytest(f"--vigil-report={report_file}", "-n", "2")
+        result = pytester.runpytest(f"--vigil-json-report={report_file}", "-n", "2")
         assert result.ret == 0
         
-        with open(pytester.path / report_file) as f:
+        with open(pytester.path / ".pytest_vigil" / report_file) as f:
             data = json.load(f)
         
         # Should have all 3 tests in report
