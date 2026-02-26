@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.6.2] - 2026-02-26
+
+### Added
+- Added a regression test to verify `pytest --help` renders pytest-vigil CLI options.
+
+### Fixed
+- Escaped percent signs in CLI help text for CPU-related options to prevent help rendering issues.
+
 ## [0.6.1] - 2026-02-19
 
 ### Changed
@@ -136,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.0...v0.5.1

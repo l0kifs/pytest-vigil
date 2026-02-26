@@ -7,6 +7,14 @@ pytest_plugins = ["pytester"]
 
 class TestResourceLimitsCLI:
     """Test resource limits via CLI parameters."""
+
+    def test_help_output_with_vigil_options(self, pytester):
+        """Verify `pytest --help` renders Vigil options without crashing."""
+        result = pytester.runpytest("--help")
+        assert result.ret == 0
+        output = result.stdout.str()
+        assert "--vigil-cpu" in output
+        assert "--vigil-stall-cpu-threshold" in output
     
     def test_cli_timeout_option(self, pytester):
         """Verify --vigil-timeout CLI option works."""

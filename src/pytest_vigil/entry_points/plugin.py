@@ -70,10 +70,10 @@ def pytest_addoption(parser) -> None:
     group = parser.getgroup("vigil")
     group.addoption("--vigil-timeout",        action="store", dest="vigil_timeout",        help="Timeout in seconds for each test")
     group.addoption("--vigil-memory",         action="store", dest="vigil_memory",         help="Memory limit in MB for each test")
-    group.addoption("--vigil-cpu",            action="store", dest="vigil_cpu",            help="CPU limit in % for each test")
+    group.addoption("--vigil-cpu",            action="store", dest="vigil_cpu",            help="CPU limit in %% for each test")
     group.addoption("--vigil-retry",          action="store", dest="vigil_retry",          help="Number of retries for failed/violation tests")
     group.addoption("--vigil-stall-timeout",  action="store", dest="vigil_stall_timeout",  help="Max duration in seconds of low CPU for stall detection")
-    group.addoption("--vigil-stall-cpu-threshold", action="store", dest="vigil_stall_cpu_threshold", help="CPU threshold in % for stall detection")
+    group.addoption("--vigil-stall-cpu-threshold", action="store", dest="vigil_stall_cpu_threshold", help="CPU threshold in %% for stall detection")
     group.addoption(
         "--vigil-json-report",
         action="store",
