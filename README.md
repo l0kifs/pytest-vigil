@@ -25,12 +25,14 @@
 
 ## ✨ Features
 
-- **Resource limits**: Set maximum time, memory (MB), and CPU (%) per test
 - **Deadlock detection**: Kill tests that hang with low CPU activity
 - **Suite timeout**: Stop the entire test run after a specified duration
 - **CI scaling**: Automatically relaxes limits by 2x in CI environments (configurable)
 - **Retry mechanism**: Re-run tests that fail due to resource violations
 - **Detailed reports**: JSON output showing CPU breakdown by process type (browser, renderer, etc.)
+- **Per-test timeout**: Layered timeout enforcement — kernel-level alarm backstop, C-level faulthandler diagnostics, and optional force-exit escalation for tests stuck in GIL-holding C extensions
+- **Per-test memory limit**: Kills tests that exceed memory limits
+- **Per-test CPU limit**: Kills tests that exceed CPU usage limits
 
 ## 🚀 Installation
 
@@ -75,6 +77,7 @@ pytest --vigil-json-report
 | `--vigil-json-report` | `False` | Enable JSON reliability report saving |
 | `--vigil-output-dir` | `.pytest_vigil` | Base directory for generated Vigil artifacts |
 | `--vigil-cli-report-verbosity` | `short` | Terminal output: `none`, `short`, `full` |
+| `--vigil-force-exit-delay` | `None` | Seconds after a soft interrupt before calling `os._exit(124)`. Use when tests are stuck in GIL-holding C extensions. Disabled by default. |
 
 ### Using Markers
 
@@ -118,6 +121,7 @@ Perfect for CI/CD pipelines. All options are available via `PYTEST_VIGIL__*` pre
 | `JSON_REPORT_FILENAME` | `vigil_report.json` | Default JSON report filename when reporting is enabled |
 | `JSON_REPORT` | `False` | Enable JSON report saving by default |
 | `ARTIFACTS_DIR` | `.pytest_vigil` | Base directory for generated Vigil artifacts |
+| `FORCE_EXIT_DELAY` | `None` | Seconds after a soft interrupt before calling `os._exit(124)`. Disabled by default. |
 
 ## 📊 Reporting
 

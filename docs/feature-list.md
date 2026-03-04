@@ -87,3 +87,12 @@ retry = 1
 ### 10. Flaky test resource diff
 **Problem:** Flaky tests are identified (passed after retry) but there is no analysis of *why* they were flaky.
 **Suggestion:** For tests in `flaky_tests`, include a `resource_diff` in the JSON comparing resource usage between the failed attempt and the passing attempt (e.g., the first attempt used 3× more CPU).
+
+---
+
+### 11. Subprocess isolation mode
+The only way to guarantee per-test timeout works against any code is to run each test in a subprocess and kill it with SIGKILL. The parent process is immune to GIL, signal masking, C extensions — the subprocess just dies.
+
+This is what pytest-xdist effectively provides when each worker gets one test. You could add --vigil-subprocess mode that runs each test via subprocess.run(["pytest", "--collect-only", item.nodeid, ...]) with a timeout= parameter.
+
+Real cost: subprocess startup overhead (0.1–0.5s per test), session-scoped fixtures can't be shared, adds complexity. Makes sense as an opt-in mode for tests known to use unsafe C extensions.

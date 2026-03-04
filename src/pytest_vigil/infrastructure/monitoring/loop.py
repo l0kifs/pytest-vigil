@@ -1,7 +1,6 @@
 """Monitoring loop infrastructure."""
 
 import threading
-import time
 from typing import List, Callable, Optional
 from loguru import logger
 from pytest_vigil.domains.reliability.models import TestExecution, ResourceLimit
@@ -72,4 +71,4 @@ class VigilMonitor:
                 logger.error(f"Vigil monitor error: {e}")
                 break
             
-            time.sleep(self.interval)
+            self._stop_event.wait(self.interval)

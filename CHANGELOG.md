@@ -16,6 +16,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.7.0] - 2026-03-04
+
+### Added
+- **Per-test timeout reliability — layered enforcement** (`docs/feature-per-test-timeout.md`):
+  - **Layer 2 — Kernel alarm backstop** (Unix, automatic): `signal.alarm()` is armed at test start when a timeout is configured. Fires independently of the monitoring thread, ensuring the test is interrupted even if the thread is delayed or dead.
+  - **Layer 3 — Faulthandler diagnostics** (automatic when timeout is set): `faulthandler.dump_traceback_later()` is armed at `timeout + 1 s`. Writes C-level thread tracebacks directly to stderr (bypassing pytest capture), surviving even when Python is blocked inside a C extension.
+  - **Layer 4 — Force-exit escalation** (opt-in): New `--vigil-force-exit-delay` CLI option and `PYTEST_VIGIL__FORCE_EXIT_DELAY` env var. When set, calls `os._exit(124)` if the soft interrupt is not handled within the specified delay. Useful for tests permanently stuck in GIL-holding C extensions.
+- New test suite `tests/timeout_reliability/` covering all four reliability layers:
+  - `test_signal_alarm_backstop.py` — kernel alarm set/cancel/reset-between-retries
+  - `test_faulthandler_diagnostics.py` — faulthandler armed/cancelled/output-on-hang
+  - `test_force_exit_escalation.py` — escalation fires / is cancelled on clean exit
+  - `test_monitor_stop_responsiveness.py` — monitor stops promptly (Event.wait fix)
+  - `test_interrupt_reliability_xdist.py` — xdist worker isolation sanity checks
+
+### Changed
+- `VigilMonitor` now uses `threading.Event.wait(interval)` instead of `time.sleep(interval)` so the monitor thread stops immediately when signalled rather than waiting out the full sleep interval.
+- `Interrupter` refactored to accept `force_exit_delay` parameter and manage the escalation thread lifecycle.
+- `SignalManager` gained `set_alarm(timeout)` and `cancel_alarm()` methods; `restore()` now also cancels any pending alarm before reinstating the previous handler.
+
 ## [0.6.2] - 2026-02-26
 
 ### Added

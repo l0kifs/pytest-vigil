@@ -1,5 +1,6 @@
 """Pytest plugin entry point for pytest-vigil."""
 
+import faulthandler
 import os
 from pathlib import Path
 import pytest
@@ -87,6 +88,16 @@ def pytest_addoption(parser) -> None:
     group.addoption("--vigil-session-timeout", action="store", dest="vigil_session_timeout", help="Global timeout in seconds for the entire test session")
     group.addoption("--vigil-session-timeout-grace-period", action="store", dest="vigil_session_timeout_grace_period", help="Grace period in seconds after session timeout before forceful termination")
     group.addoption("--vigil-cli-report-verbosity", action="store", dest="vigil_cli_report_verbosity", choices=["none", "short", "full"], help="Control terminal report display")
+    group.addoption(
+        "--vigil-force-exit-delay",
+        action="store",
+        dest="vigil_force_exit_delay",
+        help=(
+            "Seconds to wait after a soft interrupt before calling os._exit(124). "
+            "Useful for tests stuck in GIL-holding C extensions that cannot be "
+            "interrupted normally. Disabled by default."
+        ),
+    )
 
 
 def pytest_configure(config) -> None:
@@ -144,6 +155,7 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
     retry_count = settings.retry_count
     stall_timeout = settings.stall_timeout
     stall_threshold = settings.stall_cpu_threshold
+    force_exit_delay = settings.force_exit_delay
 
     # CLI overrides
     cli_timeout = item.config.getoption("vigil_timeout")
@@ -164,6 +176,9 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
     cli_stall_threshold = item.config.getoption("vigil_stall_cpu_threshold")
     if cli_stall_threshold is not None:
         stall_threshold = float(cli_stall_threshold)
+    cli_force_exit_delay = item.config.getoption("vigil_force_exit_delay")
+    if cli_force_exit_delay is not None:
+        force_exit_delay = float(cli_force_exit_delay)
 
     # Marker overrides
     marker = item.get_closest_marker("vigil")
@@ -199,7 +214,7 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
     if stall_timeout is not None:
         limits.append(ResourceLimit(limit_type=InteractionType.STALL, threshold=stall_timeout, secondary_threshold=stall_threshold, strict=settings.strict_mode))
 
-    interrupter = Interrupter()
+    interrupter = Interrupter(force_exit_delay=force_exit_delay)
     signal_manager = SignalManager()
     signal_manager.install()
     policy_service = PolicyService()
@@ -214,6 +229,26 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
 
             def on_violation(limit: ResourceLimit) -> None:
                 interrupter.trigger(f"Policy violation: {limit}")
+
+            # Set the kernel-level alarm backstop for this attempt.
+            # This fires even if the monitoring thread dies or is delayed.
+            if timeout_val is not None:
+                signal_manager.set_alarm(timeout_val)
+
+            # Enable faulthandler diagnostics: writes C-level thread tracebacks to
+            # fd 2 (real stderr) if the test is still running after timeout_val + 1 s.
+            # We open fd 2 directly (bypassing Python-level capture) so the output
+            # reaches the real pipe/terminal even when pytest's capture is active.
+            _faulthandler_active = False
+            _faulthandler_file = None
+            if timeout_val is not None and hasattr(faulthandler, "dump_traceback_later"):
+                try:
+                    import io
+                    _faulthandler_file = io.FileIO(2, closefd=False)
+                    faulthandler.dump_traceback_later(timeout_val + 1.0, repeat=False, file=_faulthandler_file)
+                    _faulthandler_active = True
+                except Exception:
+                    pass
 
             monitor = VigilMonitor(
                 execution=execution,
@@ -234,6 +269,13 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
                 raise
             finally:
                 monitor.stop()
+                # Cancel the kernel alarm and faulthandler for this attempt so
+                # they do not fire into the next attempt or the next test.
+                signal_manager.cancel_alarm()
+                if _faulthandler_active and hasattr(faulthandler, "cancel_dump_traceback_later"):
+                    faulthandler.cancel_dump_traceback_later()
+                # Cancel any pending force-exit escalation.
+                interrupter.cancel_escalation()
 
             if execution.measurements:
                 max_cpu = max(m.cpu_percent for m in execution.measurements)
