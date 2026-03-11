@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.7.1] - 2026-03-11
+
+### Fixed
+- `TimeoutException` (a `BaseException` subclass) now correctly caught per retry attempt in `pytest_runtest_protocol`, preventing the xdist worker crash that produced `INTERNALERROR> RuntimeError: Unexpectedly no active workers available`.
+- Existing xdist timeout test updated: replaced `"TimeoutException: ..." in output` assertion (only matched the old crash traceback) with `assert_outcomes(passed=1, failed=1)` and `"INTERNALERROR>" not in output` checks that correctly describe the fixed behaviour.
+
+### Tests
+- Added `TestTimeoutExceptionXdistWorkerSafety` class in `tests/resource_limits/test_resource_limits_xdist.py` with 5 targeted regression tests covering: single timeout, back-to-back timeouts in one worker, timeout across retry attempts, timeout followed by passing test, and exit-code verification.
+- Added `TestRetryWithTimeoutXdist` class in `tests/retry_mechanism/test_retry_xdist.py` with 3 tests covering: all retry attempts timing out, timeout on first attempt then passing on retry, and worker liveness after exhausted retried timeout.
+
 ## [0.7.0] - 2026-03-04
 
 ### Added

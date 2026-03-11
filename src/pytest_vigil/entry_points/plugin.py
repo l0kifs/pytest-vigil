@@ -4,7 +4,8 @@ import faulthandler
 import os
 from pathlib import Path
 import pytest
-from _pytest.runner import runtestprotocol
+from _pytest.runner import runtestprotocol, CallInfo
+from _pytest.reports import TestReport
 from loguru import logger
 
 from pytest_vigil.config.settings import get_settings
@@ -16,7 +17,7 @@ from pytest_vigil.domains.reliability.models import (
 )
 from pytest_vigil.domains.reliability.services import PolicyService
 from pytest_vigil.infrastructure.enforcement.interrupt import Interrupter
-from pytest_vigil.infrastructure.enforcement.signals import SignalManager
+from pytest_vigil.infrastructure.enforcement.signals import SignalManager, TimeoutException
 from pytest_vigil.infrastructure.monitoring.loop import VigilMonitor
 from pytest_vigil.infrastructure.monitoring.session import SessionMonitor
 from pytest_vigil.infrastructure.reporting.cli_reporter import CliReporter
@@ -259,23 +260,54 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
             )
             monitor.start()
 
+            timed_out = False
             try:
                 reports = runtestprotocol(item, nextitem=nextitem, log=False)
             except KeyboardInterrupt:
-                monitor.stop()
-                raise
-            except Exception:
-                monitor.stop()
-                raise
-            finally:
-                monitor.stop()
-                # Cancel the kernel alarm and faulthandler for this attempt so
-                # they do not fire into the next attempt or the next test.
+                # Cancel alarm BEFORE monitor.stop() so SIGALRM cannot fire
+                # inside thread.join() and kill the xdist worker.
                 signal_manager.cancel_alarm()
                 if _faulthandler_active and hasattr(faulthandler, "cancel_dump_traceback_later"):
                     faulthandler.cancel_dump_traceback_later()
-                # Cancel any pending force-exit escalation.
                 interrupter.cancel_escalation()
+                monitor.stop()
+                raise
+            except BaseException as exc:
+                # TimeoutException is a BaseException subclass (not Exception), so it
+                # falls through a plain `except Exception` block and would otherwise
+                # propagate uncaught through the retry loop, through
+                # pytest_runtest_protocol, and ultimately kill the xdist worker with
+                # "Unexpectedly no active workers available".
+                #
+                # Instead: cancel the alarm FIRST (before monitor.stop() / thread.join())
+                # to prevent a second SIGALRM delivery from firing inside threading
+                # internals (lock.acquire), then synthesize a proper FAILED report so
+                # pytest records the timeout as a normal test failure and moves on.
+                signal_manager.cancel_alarm()
+                if _faulthandler_active and hasattr(faulthandler, "cancel_dump_traceback_later"):
+                    faulthandler.cancel_dump_traceback_later()
+                interrupter.cancel_escalation()
+                monitor.stop()
+                if isinstance(exc, TimeoutException):
+                    timed_out = True
+                    _captured_exc = exc
+
+                    def _raise_timeout():
+                        raise _captured_exc
+
+                    timeout_call = CallInfo.from_call(_raise_timeout, when="call")
+                    reports = [TestReport.from_item_and_call(item, timeout_call)]
+                    logger.warning(f"Test {item.nodeid} timed out (Vigil): {exc}")
+                else:
+                    raise
+            finally:
+                # Safety net: cancel alarm and stop monitor even if the branches above
+                # already did so (cancel_alarm and stop() are idempotent).
+                signal_manager.cancel_alarm()
+                if _faulthandler_active and hasattr(faulthandler, "cancel_dump_traceback_later"):
+                    faulthandler.cancel_dump_traceback_later()
+                interrupter.cancel_escalation()
+                monitor.stop()
 
             if execution.measurements:
                 max_cpu = max(m.cpu_percent for m in execution.measurements)
