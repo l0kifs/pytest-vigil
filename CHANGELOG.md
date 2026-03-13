@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.7.2] - 2026-03-13
+
+### Fixed
+- `VigilMonitor.stop()` now wraps `thread.join()` in `try/except BaseException` to handle a SIGALRM race condition: a signal already placed in the OS pending-signal set before `cancel_alarm()` ran could fire during `lock.acquire()` inside `thread.join()`, raising `TimeoutException` in cleanup code and crashing xdist workers with `INTERNALERROR`.
+
 ## [0.7.1] - 2026-03-11
 
 ### Fixed

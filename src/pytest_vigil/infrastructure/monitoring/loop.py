@@ -40,7 +40,14 @@ class VigilMonitor:
         """Stops the monitoring thread."""
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
-            self._thread.join(timeout=1.0)
+            try:
+                self._thread.join(timeout=1.0)
+            except BaseException:
+                # A SIGALRM that was already queued in the OS pending-signal set
+                # before cancel_alarm() ran can still fire during lock.acquire()
+                # inside thread.join().  The thread is daemon=True so it will
+                # exit on its own; swallow the interruption so cleanup completes.
+                pass
 
     def _run(self) -> None:
         # Initialize CPU counter (first call often irrelevant)
