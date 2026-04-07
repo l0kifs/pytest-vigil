@@ -2,7 +2,9 @@
 
 import threading
 from typing import List, Callable, Optional
-from loguru import logger
+from pytest_vigil.infrastructure.observability.logging import get_logger
+
+log = get_logger(__name__)
 from pytest_vigil.domains.reliability.models import TestExecution, ResourceLimit
 from pytest_vigil.domains.reliability.services import PolicyService
 from pytest_vigil.infrastructure.monitoring.system import SystemMonitor
@@ -75,7 +77,7 @@ class VigilMonitor:
                         break
             except Exception as e:
                 # Reliability: Plugin crash shouldn't affect suite
-                logger.error(f"Vigil monitor error: {e}")
+                log.exception("vigil.monitor: unexpected error")
                 break
             
             self._stop_event.wait(self.interval)

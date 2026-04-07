@@ -6,7 +6,9 @@ import _thread
 import sys
 import threading
 from typing import Optional
-from loguru import logger
+from pytest_vigil.infrastructure.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 
 class Interrupter:
@@ -29,7 +31,13 @@ class Interrupter:
 
     def trigger(self, reason: str) -> None:
         """Trigger a soft interrupt in the main thread."""
-        logger.error(f"Test interruption triggered: {reason}")
+        # Write directly to fd 2 so the message is always visible regardless of
+        # pytest's per-test log capture state (monitor thread timing race).
+        try:
+            os.write(2, f"vigil.interrupter: test interruption triggered: {reason}\n".encode("utf-8", errors="replace"))
+        except Exception:
+            pass
+        log.error("vigil.interrupter: test interruption triggered: %s", reason)
         self._dump_stacks()
 
         if hasattr(signal, "SIGALRM"):
@@ -62,7 +70,7 @@ class Interrupter:
     def _escalation_run(self) -> None:
         """Daemon thread: force-exit if the soft interrupt is not handled in time."""
         if self._escalation_cancel.wait(self._force_exit_delay):
-            logger.debug("Vigil escalation: cancelled — interrupt was handled in time")
+            log.debug("vigil.interrupter: escalation cancelled — interrupt was handled in time")
             return
 
         msg = (
@@ -88,4 +96,4 @@ class Interrupter:
                 code.append(f'File: "{filename}", line {lineno}, in {name}')
                 if line:
                     code.append(f"  {line}")
-        logger.error("\n".join(code))
+        log.error("vigil.interrupter: stack dump", stack="\n".join(code))

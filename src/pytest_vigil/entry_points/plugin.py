@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 from _pytest.runner import runtestprotocol, CallInfo
 from _pytest.reports import TestReport
-from loguru import logger
+from pytest_vigil.infrastructure.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 from pytest_vigil.config.settings import get_settings
 from pytest_vigil.domains.reliability.models import (
@@ -64,7 +66,7 @@ def pytest_sessionstart(session) -> None:
             get_last_test=lambda: _last_test_nodeid,
         )
         _session_monitor.start()
-        logger.info(f"Session timeout set to {session_timeout}s (CI multiplier: {multiplier}x)")
+        log.info("vigil: session timeout configured", timeout=session_timeout, ci_multiplier=multiplier)
 
 
 def pytest_addoption(parser) -> None:
@@ -297,7 +299,7 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
 
                     timeout_call = CallInfo.from_call(_raise_timeout, when="call")
                     reports = [TestReport.from_item_and_call(item, timeout_call)]
-                    logger.warning(f"Test {item.nodeid} timed out (Vigil): {exc}")
+                    log.warning("vigil: test timed out", nodeid=item.nodeid)
                 else:
                     raise
             finally:
@@ -341,7 +343,7 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
                 return True
 
             if attempt < retry_count:
-                logger.warning(f"Test {item.nodeid} failed attempt {attempt + 1}/{retry_count + 1}. Retrying...")
+                log.warning("vigil: test failed, retrying", nodeid=item.nodeid, attempt=attempt + 1, max_attempts=retry_count + 1)
             else:
                 item.ihook.pytest_runtest_logfinish(nodeid=item.nodeid, location=item.location)
     finally:

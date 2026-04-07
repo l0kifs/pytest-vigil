@@ -5,7 +5,9 @@ import threading
 import time
 from typing import Optional, Callable
 import psutil
-from loguru import logger
+from pytest_vigil.infrastructure.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 
 class SessionMonitor:
@@ -49,19 +51,19 @@ class SessionMonitor:
             name="vigil-session-monitor"
         )
         self._thread.start()
-        logger.info(f"Session monitor started with timeout of {self.timeout}s")
+        log.info("vigil.session_monitor: started", timeout=self.timeout)
 
     def stop(self) -> None:
         """Stop the session monitoring thread."""
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=1.0)
-        logger.debug("Session monitor stopped")
+        log.debug("vigil.session_monitor: stopped")
 
     def _run(self) -> None:
         """Main monitoring loop."""
         if self._start_time is None:
-            logger.error("Session monitor started without start_time")
+            log.error("vigil.session_monitor: started without start_time")
             return
             
         while not self._stop_event.is_set():
@@ -95,20 +97,14 @@ class SessionMonitor:
         
         if current_test:
             timeout_msg += f"Currently executing test: {current_test}\n"
-            logger.error(
-                f"Session timeout exceeded ({self.timeout}s). "
-                f"Currently executing test: {current_test}"
-            )
+            log.error("vigil.session_monitor: session timeout exceeded", timeout=self.timeout, current_test=current_test)
         elif last_test:
             timeout_msg += f"Last executed test: {last_test}\n"
             timeout_msg += "(Timeout occurred between tests)\n"
-            logger.error(
-                f"Session timeout exceeded ({self.timeout}s). "
-                f"Last executed test: {last_test}. Timeout occurred between tests."
-            )
+            log.error("vigil.session_monitor: session timeout exceeded", timeout=self.timeout, last_test=last_test)
         else:
             timeout_msg += "No test currently executing (or test tracking not available)\n"
-            logger.error(f"Session timeout exceeded ({self.timeout}s)")
+            log.error("vigil.session_monitor: session timeout exceeded", timeout=self.timeout)
         
         timeout_msg += f"{'='*70}\n"
         
@@ -122,13 +118,13 @@ class SessionMonitor:
             sys.stderr.flush()
         
         # Terminate child processes first
-        logger.info("Terminating child processes...")
+        log.info("vigil.session_monitor: terminating child processes")
         self._terminate_child_processes()
         
         # Give a brief moment for children to exit
         time.sleep(0.5)
         
-        logger.error("Forcing test session to exit due to timeout")
+        log.error("vigil.session_monitor: forcing test session to exit due to timeout")
         
         # Flush all output streams
         try:
@@ -148,39 +144,39 @@ class SessionMonitor:
             children = current_process.children(recursive=True)
             
             if children:
-                logger.info(f"Terminating {len(children)} child process(es)...")
+                log.info("vigil.session_monitor: terminating child processes", count=len(children))
                 for child in children:
                     try:
-                        logger.debug(f"Terminating child process {child.pid}: {child.name()}")
+                        log.debug("vigil.session_monitor: terminating child process", pid=child.pid, name=child.name())
                         child.terminate()
                     except psutil.NoSuchProcess:
                         pass
                     except Exception as e:
-                        logger.warning(f"Error terminating child process {child.pid}: {e}")
+                        log.warning("vigil.session_monitor: error terminating child process", pid=child.pid)
                 
                 # Give children time to terminate gracefully
                 gone, alive = psutil.wait_procs(children, timeout=3)
                 
                 if gone:
-                    logger.debug(f"Successfully terminated {len(gone)} child process(es)")
+                    log.debug("vigil.session_monitor: terminated child processes", count=len(gone))
                 
                 # Force kill any remaining children
                 if alive:
-                    logger.warning(f"Force killing {len(alive)} remaining child process(es)")
+                    log.warning("vigil.session_monitor: force killing remaining child processes", count=len(alive))
                     for child in alive:
                         try:
-                            logger.debug(f"Force killing child process {child.pid}")
+                            log.debug("vigil.session_monitor: force killing child process", pid=child.pid)
                             child.kill()
                         except psutil.NoSuchProcess:
                             pass
                         except Exception as e:
-                            logger.warning(f"Error killing child process {child.pid}: {e}")
+                            log.warning("vigil.session_monitor: error killing child process", pid=child.pid)
                     
                     # Final wait to confirm
                     psutil.wait_procs(alive, timeout=1)
             else:
-                logger.debug("No child processes to terminate")
-        except Exception as e:
-            logger.error(f"Error terminating child processes: {e}")
+                log.debug("vigil.session_monitor: no child processes to terminate")
+        except Exception:
+            log.exception("vigil.session_monitor: error terminating child processes")
 
 

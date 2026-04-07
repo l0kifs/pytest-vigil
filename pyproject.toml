@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "pytest-vigil"
-version = "0.7.2"
+version = "0.8.0"
 description = "A pytest plugin for enhanced test reliability and monitoring"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,7 +40,6 @@ classifiers = [
 ]
 dependencies = [
     "pytest>=9.0.0",
-    "loguru>=0.7.0",
     "psutil>=7.2.2",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",

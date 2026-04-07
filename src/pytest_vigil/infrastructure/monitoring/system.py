@@ -3,7 +3,9 @@
 import os
 import psutil
 from typing import Tuple, Dict
-from loguru import logger
+from pytest_vigil.infrastructure.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 class SystemMonitor:
     def __init__(self):
@@ -68,7 +70,7 @@ class SystemMonitor:
                         continue
             
         except Exception as e:
-            logger.debug(f"Error collecting child process stats: {e}")
+            log.debug("vigil.system_monitor: error collecting child process stats", error=str(e))
             # Continue with main process stats only
         
         return total_cpu, mem_mb, cpu_breakdown

@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - None yet
 
+## [0.8.0] - 2026-04-07
+
+### Changed
+- Replaced `loguru` with stdlib `logging` throughout the codebase. The plugin now uses a thin `_KeywordAdapter` wrapper (`infrastructure/observability/logging.py`) that preserves `log.info("msg", key=value)` call-site ergonomics while routing through the standard library. Host applications can configure, filter, and route plugin logs using any normal Python logging setup.
+- `loguru>=0.7.0` removed from runtime dependencies. The plugin now has one fewer third-party dependency.
+- Package root installs a `NullHandler` on the `pytest_vigil` logger namespace so the plugin stays silent by default until the host configures a handler.
+
+### Added
+- `src/pytest_vigil/infrastructure/observability/logging.py` — stdlib `logging` adapter (`get_logger`, `_KeywordAdapter`, `bind`) that converts keyword call arguments into `extra` fields.
+- `docs/ddd-architecture-rules.md` — architecture rules for DDD-based Python projects.
+- `docs/logging-rules.md` updated to be plugin-independent (removed `pytest-beacon` specific references).
+
 ## [0.7.2] - 2026-03-13
 
 ### Fixed
@@ -178,7 +190,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable monitoring intervals and thresholds via settings
 - Comprehensive test suite covering all features including CI multiplier, retry logic, stall detection, and xdist integration
 
-[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/l0kifs/pytest-vigil/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.7.2...v0.8.0
+[0.7.2]: https://github.com/l0kifs/pytest-vigil/compare/v0.7.1...v0.7.2
 [0.6.2]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/l0kifs/pytest-vigil/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/l0kifs/pytest-vigil/compare/v0.5.1...v0.6.0
