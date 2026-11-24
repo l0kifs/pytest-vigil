@@ -2,27 +2,24 @@
 
 import math
 import signal
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 
-
 class TimeoutException(pytest.fail.Exception):
-    """A pytest failure that ordinary ``except Exception`` cannot swallow."""
-
+    """Exception raised when a test times out."""
+    pass
 
 def timeout_signal_handler(signum: int, frame: Any) -> None:
     """Signal handler that raises TimeoutException."""
-    # The monitor and kernel alarm can both fire for the same attempt. Allow
-    # fixture cleanup to finish without another interruption from either source.
+    # Let fixture cleanup finish without duplicate monitor/alarm interruptions.
     signal.alarm(0)
     signal.signal(signal.SIGALRM, signal.SIG_IGN)
     raise TimeoutException("Test timed out (Vigil)")
 
-
 class SignalManager:
     def __init__(self):
-        self._old_handler: Any | None = None
+        self._old_handler: Optional[Any] = None
 
     def install(self) -> None:
         if hasattr(signal, "SIGALRM"):
