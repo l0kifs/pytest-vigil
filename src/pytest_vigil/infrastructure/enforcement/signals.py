@@ -4,12 +4,17 @@ import math
 import signal
 from typing import Any, Optional
 
-class TimeoutException(BaseException):
+import pytest
+
+class TimeoutException(pytest.fail.Exception):
     """Exception raised when a test times out."""
     pass
 
 def timeout_signal_handler(signum: int, frame: Any) -> None:
     """Signal handler that raises TimeoutException."""
+    # Let fixture cleanup finish without duplicate monitor/alarm interruptions.
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, signal.SIG_IGN)
     raise TimeoutException("Test timed out (Vigil)")
 
 class SignalManager:
@@ -18,7 +23,9 @@ class SignalManager:
 
     def install(self) -> None:
         if hasattr(signal, "SIGALRM"):
-            self._old_handler = signal.signal(signal.SIGALRM, timeout_signal_handler)
+            previous = signal.signal(signal.SIGALRM, timeout_signal_handler)
+            if self._old_handler is None:
+                self._old_handler = previous
 
     def set_alarm(self, timeout: float) -> None:
         """Set a kernel-level SIGALRM timer as a hard backstop (Unix only).
