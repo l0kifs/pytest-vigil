@@ -219,13 +219,14 @@ def pytest_runtest_protocol(item, nextitem) -> bool | None:
 
     interrupter = Interrupter(force_exit_delay=force_exit_delay)
     signal_manager = SignalManager()
-    signal_manager.install()
     policy_service = PolicyService()
 
     global _current_test_nodeid
 
     try:
         for attempt in range(retry_count + 1):
+            # Rearm the one-shot handler after a timed-out attempt.
+            signal_manager.install()
             _current_test_nodeid = item.nodeid
             item.ihook.pytest_runtest_logstart(nodeid=item.nodeid, location=item.location)
             execution = TestExecution(item_id=item.nodeid, node_id=item.nodeid, retry_attempt=attempt)

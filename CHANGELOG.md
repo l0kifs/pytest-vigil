@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - None yet
 
 ### Fixed
-- None yet
+- Per-test timeout exceptions are now pytest failures, allowing pytest to continue fixture finalization after a timeout.
+- Duplicate monitor/kernel SIGALRM delivery no longer interrupts cleanup after the first timeout. The one-shot handler is rearmed for each retry and the original signal handler is restored after the test protocol.
 
 ## [0.8.0] - 2026-04-07
 
